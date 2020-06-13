@@ -7,25 +7,38 @@ const userModel = require('../models/Users')
 router.post('/new/sala', verifyToken ,async(req, res) => {
     const { users, name, password, creator } = req.body
     const price = parseFloat(req.body.price)
+    const protected = password ? true : false
     
     const user = await userModel.findById(req.userToken, {password: 0})
-    const newSala = new salasModel({ users, price, name, password, creator })
+    const newSala = new salasModel({ users, price, name, password, creator, protected })
     
+    if(user.wallet < price){
+        return res.json({error: 'No hay dinero suficiente'})
+    }
+
     user.wallet = user.wallet - price
-    newSala.password = await newSala.encryptPassword( password )
-  
+
     await user.save()
     await newSala.save()
-    res.json(newSala)
+    res.json({msg: 'Sala creada correctamente'})
 
 })
 
 router.post('/search/sala', verifyToken, async(req, res) =>{
-    const { name } = req.body
+    const { name, salaId } = req.body
     
     const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
 
-    res.json(salabyName)
+    if(salabyName){
+        return res.json({data: salabyName})
+    }
+    const salaById =await salasModel.findById(salaId, {password: 0, users:0})
+    
+    if(salaById){
+        res.json({data: salaById})
+    }
+    
+    res.json({error: 'No existe esta sala'})
 })
 
 router.get('/search/listSalas', verifyToken, async(req, res) => {
@@ -40,11 +53,20 @@ router.post('/newUserInSala', verifyToken, async(req, res) => {
     const { salaId, parentUser } = req.body
     const userId = req.userToken
 
+    const price = await salasModel.findById(salaId, {price: 1, _id: 0})
+    const user = await userModel.findById(req.userToken, {password: 0})
+
+    if(user.wallet < price.price){
+        return res.json({error: 'No hay dinero suficiente'})
+    }
+
+    user.wallet = user.wallet - price.price
+
     const parentUserId = await userModel.findOne({userName: parentUser},{_id: 1})
     if(!parentUserId){
         return res.json({error: 'No existe este usuario'})
     }
-    const parentId = parentUserId._id
+    const parentId = await parentUserId._id
 
     const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentId }}})
     .populate('users.user')
@@ -63,15 +85,6 @@ router.post('/newUserInSala', verifyToken, async(req, res) => {
             }
         }
     }) 
-
-    const price = await salasModel.findById(salaId, {price: 1, _id: 0})
-    const user = await userModel.findById(req.userToken, {password: 0})
-
-    if(user.wallet < price.price){
-        return res.json({error: 'No hay dinero suficiente'})
-    }
-
-    user.wallet = user.wallet - price.price
     
     if(parent.users[0].childsId.childId1 === undefined){
         parent.users[0].childsId.childId1 = userId

@@ -8,7 +8,15 @@ const UserSchema = new Schema({
     email: {type: String, required: true},
     password: {type: String, required: true},
     wallet: {type: Number, default: 0},
-    date: { type: Date, default: Date.now }
+    date: { type: Date, default: Date.now },
+    invitations: [{
+      host: { type: String },
+      parentUsername: {type: String},
+      message: {type: String},
+      price: {type: Number},
+      salaId: {type: Schema.Types.ObjectId, ref: 'Salas'},
+      salaName: {type: String}
+    }]
 })
 
   UserSchema.methods.encryptPassword = async password => {

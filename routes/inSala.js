@@ -151,7 +151,7 @@ router.get('/sala', verifyToken, async(req, res) => {
         .populate('users.user')
         .populate('users.childsId.childId1')
         .populate('users.childsId.childId2')
-        var child6_1 = parent5_1.users[0].childsId.childId1.userName
+        var child6_1 = parent5_1.users[0].childsId.childId1
         var child6_2 = parent5_1.users[0].childsId.childId2
     }
     if(child5_2){
@@ -277,13 +277,13 @@ router.get('/sala', verifyToken, async(req, res) => {
 
 /* ------------------------/Nivel 5------------------------------------------------------------------------------- */
 
-const allData = {
+const allData = [
     child2_1,child2_2,
     child3_1,child3_2,child3_3,child3_4,
     child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8,
     child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16,
     child6_1,child6_2,child6_3,child6_4,child6_5,child6_6,child6_7,child6_8,child6_9,child6_10,child6_11,child6_12,child6_13,child6_14,child6_15,child6_16,child6_17,child6_18,child6_19,child6_20,child6_21,child6_22,child6_23,child6_24,child6_25,child6_26,child6_27,child6_28,child6_29,child6_30,child6_31,child6_32
-}
+    ]
 
 
 res.json(allData)
