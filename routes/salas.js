@@ -3,6 +3,7 @@ const router = express.Router()
 const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
+const { count } = require('../models/Salas')
 
 router.post('/new/sala', verifyToken ,async(req, res) => {
     const { users, name, password, creator } = req.body
@@ -26,26 +27,63 @@ router.post('/new/sala', verifyToken ,async(req, res) => {
 
 router.post('/search/sala', verifyToken, async(req, res) =>{
     const { name, salaId } = req.body
-    
-    const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
 
-    if(salabyName){
-        return res.json({data: salabyName})
+    try{
+        const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
+
+        if(salabyName){
+            return res.json({data: salabyName})
+        }
+        const salaById =await salasModel.findById(salaId, {password: 0, users:0})
+        
+        if(salaById){
+            res.json({data: salaById})
+        }
+        
+        res.json({error: 'No existe esta sala'})
     }
-    const salaById =await salasModel.findById(salaId, {password: 0, users:0})
-    
-    if(salaById){
-        res.json({data: salaById})
+    catch(error){
+        res.json({error: error})
     }
     
-    res.json({error: 'No existe esta sala'})
 })
 
-router.get('/search/listSalas', verifyToken, async(req, res) => {
-    const salas = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
+router.post('/search/listSalas', verifyToken, async(req, res) => {
 
-    res.json(salas)
- 
+    const perPage = 3
+    let page  = req.body.page || 1
+    let pageNext = page + 1
+    if(page < 1){
+        page = 1
+    }
+    
+    try{
+        const salas = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
+        .sort({name: -1})
+        .limit(perPage)
+        .skip((perPage * page) - perPage)
+
+        const nextPage = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
+        .limit(perPage)
+        .skip((perPage * pageNext) - perPage)
+
+        const count = await salasModel.countDocuments({users: {$elemMatch: { user: req.userToken }}})
+        
+        let next = false
+
+        if(nextPage.length >= 1 ){
+            next = true
+        }
+        console.log(next)
+        res.json({
+            data: salas,
+            next: next,
+            total: Math.ceil(count / perPage)
+        })
+    }
+    catch(error){
+        res.json({error: error})
+    }
 })
 
 router.post('/newUserInSala', verifyToken, async(req, res) => {
