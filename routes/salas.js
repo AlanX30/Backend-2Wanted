@@ -50,34 +50,22 @@ router.post('/search/sala', verifyToken, async(req, res) =>{
 
 router.post('/search/listSalas', verifyToken, async(req, res) => {
 
-    const perPage = 3
+    const perPage = 5
     let page  = req.body.page || 1
-    let pageNext = page + 1
     if(page < 1){
         page = 1
     }
     
     try{
         const salas = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
-        .sort({name: -1})
+        .sort({_id: -1})
         .limit(perPage)
         .skip((perPage * page) - perPage)
 
-        const nextPage = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
-        .limit(perPage)
-        .skip((perPage * pageNext) - perPage)
-
         const count = await salasModel.countDocuments({users: {$elemMatch: { user: req.userToken }}})
-        
-        let next = false
 
-        if(nextPage.length >= 1 ){
-            next = true
-        }
-        console.log(next)
         res.json({
             data: salas,
-            next: next,
             total: Math.ceil(count / perPage)
         })
     }
