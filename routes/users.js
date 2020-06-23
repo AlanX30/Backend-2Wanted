@@ -118,49 +118,4 @@ router.put('/wallet/withdraw', verifyToken, async(req, res) =>{
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/user/invite', verifyToken, async (req, res) => {
-    
-    const { newUser, parentUsername, message, salaId, salaName } = req.body
-    const price = parseFloat(req.body.price)
-    
-    const host = await userModel.findById(req.userToken, {userName: 1, _id: 0})
-    
-    const invited = await userModel.findOne({userName: newUser})
-    
-    await userModel.updateOne({userName: newUser}, {
-        $push: {
-            'invitations': {
-                host: host.userName,
-                parentUsername: parentUsername,
-                message: message,
-                price: price,
-                salaId: salaId,
-                salaName: salaName
-            }
-        }
-    }) 
-    
-    res.json(invited)
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.get('/user/invite', verifyToken, async (req, res) => {
-    
-    const userInvitations = await userModel.findOne({_id: req.userToken}, {invitations: 1, _id: 0})
-    
-    res.json(userInvitations.invitations)
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.post('/borrar', async (req, res) => {
-
-    const { id } = req.body
-    
-    const userInvitations = await userModel.updateOne({_id: id}, {$pop: {invitations: -1}})
-    
-    res.json(userInvitations)
-})
-
 module.exports = router
