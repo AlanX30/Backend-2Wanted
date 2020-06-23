@@ -52,6 +52,7 @@ router.post('/search/listSalas', verifyToken, async(req, res) => {
 
     const perPage = 5
     let page  = req.body.page || 1
+    
     if(page < 1){
         page = 1
     }
