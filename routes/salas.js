@@ -3,7 +3,6 @@ const router = express.Router()
 const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
-const { count } = require('../models/Salas')
 
 router.post('/new/sala', verifyToken ,async(req, res) => {
     const { users, name, password, creator } = req.body
@@ -33,14 +32,14 @@ router.post('/search/sala', verifyToken, async(req, res) =>{
 
         if(salabyName){
             return res.json({data: salabyName})
+        }else{
+            const salaById = await salasModel.findById(salaId, {password: 0, users:0})
+
+            if(salaById){
+                res.json({data: salaById})
+            }else{res.json({error: 'No existe esta sala'})}
         }
-        const salaById =await salasModel.findById(salaId, {password: 0, users:0})
         
-        if(salaById){
-            res.json({data: salaById})
-        }
-        
-        res.json({error: 'No existe esta sala'})
     }
     catch(error){
         res.json({error: error})
@@ -125,18 +124,5 @@ router.post('/newUserInSala', verifyToken, async(req, res) => {
     res.json(parent)
 
 })
-
-/* router.get('/salas/user', async(req, res) => {
-    const salas = await salasModel.findOne({ users: {$elemMatch: { user: "5ebd65cd91f9260854e820e1" }} }, {users: {$elemMatch: { user: "5ebd65cd91f9260854e820e1" }}})
-    .populate('users.user')
-    .populate('users.childsId')
-    
-    const [{user}] = salas.users
-
-    res.json(user)
-
-})
-
- */
 
 module.exports = router 

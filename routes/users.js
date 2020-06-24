@@ -38,7 +38,7 @@ router.post('/users/signin', async(req, res, next) => {
 
 router.post('/users/signup', async (req, res) => {
 
-    const { userName ,email, password, confirm_password } = req.body
+    const { userName ,email, cc, phone, password, confirm_password } = req.body
     
     if(userName === undefined || userName.length <= 4){
         return res.json({error: 'El Usuario Debe tener por lo menos 5 Caracteres'})
@@ -83,39 +83,5 @@ router.get('/me', verifyToken ,async(req, res, next) => {
 
     res.json(user)
 })
-
-/* ------------------------------------------------------------------------------------------------------- */
-    
-router.put('/wallet/deposit', verifyToken, async(req, res) =>{
-   
-    const deposit = parseFloat(req.body.deposit)
-    
-    const user = await userModel.findById(req.userToken, {password: 0})
-
-    user.wallet = user.wallet + deposit
-
-    await user.save()
-
-    res.json(user)
-
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.put('/wallet/withdraw', verifyToken, async(req, res) =>{
-    
-    const withdraw = parseFloat(req.body.withdraw)
-    
-    const user = await userModel.findById(req.userToken, {password: 0})
-    
-    user.wallet = user.wallet - withdraw
-    
-    await user.save()
-    
-    res.json(user)
-    
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router

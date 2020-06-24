@@ -18,7 +18,7 @@ router.post('/payments', async(req, res, next) => {
         items: [
           {
             title: 'Recarga De 2Wanted',
-            unit_price: price,
+            unit_price: 150,
             quantity: 1,
           }
         ],
@@ -45,7 +45,7 @@ router.post('/payments', async(req, res, next) => {
       mercadopago.preferences.create(preference)
       .then(function(response){
 
-        res.json(response.body.init_point)
+        res.json(response.body)
   
       }).catch(function(error){
         console.log(error);
@@ -61,7 +61,6 @@ router.post('/notification-payment', async(req, res, next) => {
   await axios({
     url: `https://api.mercadopago.com/v1/payments/:${id}?access_token=ACCESS_TOKEN_ENV`
   })
-
 
 })
 
