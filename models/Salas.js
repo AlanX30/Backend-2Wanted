@@ -6,12 +6,12 @@ const { Schema } = mongoose
 const SalaSchema = new Schema({
     users: [
         { 
-           user: {type: Schema.Types.ObjectId, ref: 'Users'},
+           user: {type: String},
            childsId: {
-               childId1: {type: Schema.Types.ObjectId, ref: 'Users'},
-               childId2: {type: Schema.Types.ObjectId, ref: 'Users'}
+               childId1: {type: String},
+               childId2: {type: String}
            },
-           parentId: {type: Schema.Types.ObjectId, ref: 'Users'}
+           parentId: {type: String}
         }
     ],
     price: { type: Number },

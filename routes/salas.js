@@ -49,15 +49,18 @@ router.post('/search/sala', verifyToken, async(req, res) =>{
 
 router.post('/search/listSalas', verifyToken, async(req, res) => {
 
+    const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
+
     const perPage = 5
     let page  = req.body.page || 1
     
     if(page < 1){
         page = 1
     }
-    
+   
     try{
-        const salas = await salasModel.find({ users: {$elemMatch: { user: req.userToken }} }, {name: 1, price: 1, creator: 1})
+        
+        const salas = await salasModel.find({ users: {$elemMatch: { user: user.userName }} }, {name: 1, price: 1, creator: 1})
         .sort({_id: -1})
         .limit(perPage)
         .skip((perPage * page) - perPage)
@@ -77,51 +80,40 @@ router.post('/search/listSalas', verifyToken, async(req, res) => {
 router.post('/newUserInSala', verifyToken, async(req, res) => {
     
     const { salaId, parentUser } = req.body
-    const userId = req.userToken
-
-    const price = await salasModel.findById(salaId, {price: 1, _id: 0})
+    
     const user = await userModel.findById(req.userToken, {password: 0})
-
+    const price = await salasModel.findById(salaId, {price: 1, _id: 0})
+    const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
+   
+    
     if(user.wallet < price.price){
         return res.json({error: 'No hay dinero suficiente'})
     }
-
-    user.wallet = user.wallet - price.price
-
-    const parentUserId = await userModel.findOne({userName: parentUser},{_id: 1})
-    if(!parentUserId){
-        return res.json({error: 'No existe este usuario'})
-    }
-    const parentId = await parentUserId._id
-
-    const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentId }}})
-    .populate('users.user')
-    .populate('users.childsId.childId1')
-    .populate('users.childsId.childId2')
-
     if(!parent){
-        return res.json({error: 'No existe el usuario en esta sala'})
+        return res.json({error: 'No existe el padre usuario en esta sala'})
     }
+    user.wallet = user.wallet - price.price
+    
+    if(parent.users[0].childsId.childId1 === ''){
+        parent.users[0].childsId.childId1 = user.userName
+    }else if (parent.users[0].childsId.childId2 === ''){
+        parent.users[0].childsId.childId2 = user.userName
+    }else{return res.json({error: 'El usuario padre esta lleno'})}
+    
 
     await salasModel.updateOne({_id: salaId}, {
         $push: {
             'users': {
-                user: userId,
-                parentId: parentId
+                user: user.userName,
+                parentId: parent.users[0].user
             }
         }
     }) 
-    
-    if(parent.users[0].childsId.childId1 === undefined){
-        parent.users[0].childsId.childId1 = userId
-    }else if (parent.users[0].childsId.childId2 === undefined){
-        parent.users[0].childsId.childId2 = userId
-    }
-    
+
     await user.save()
     await parent.save()
 
-    res.json(parent)
+    res.json({msg: 'Usuario agregado correctamente'})
 
 })
 
