@@ -4,7 +4,7 @@ const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
 
-router.post('/new/sala', verifyToken ,async(req, res) => {
+router.post('/api/new/sala', verifyToken ,async(req, res) => {
     const { users, name, password, creator } = req.body
     const price = parseFloat(req.body.price)
     const protected = password ? true : false
@@ -24,7 +24,7 @@ router.post('/new/sala', verifyToken ,async(req, res) => {
 
 })
 
-router.post('/search/sala', verifyToken, async(req, res) =>{
+router.post('/api/search/sala', verifyToken, async(req, res) =>{
     const { name, salaId } = req.body
 
     try{
@@ -47,7 +47,7 @@ router.post('/search/sala', verifyToken, async(req, res) =>{
     
 })
 
-router.post('/search/listSalas', verifyToken, async(req, res) => {
+router.post('/api/search/listSalas', verifyToken, async(req, res) => {
 
     const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
 
@@ -77,7 +77,7 @@ router.post('/search/listSalas', verifyToken, async(req, res) => {
     }
 })
 
-router.post('/newUserInSala', verifyToken, async(req, res) => {
+router.post('/api/newUserInSala', verifyToken, async(req, res) => {
     
     const { salaId, parentUser } = req.body
     

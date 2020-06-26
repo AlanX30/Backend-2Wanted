@@ -1,6 +1,7 @@
 const express = require('express')
 require('./database')
 const bodyParser = require('body-parser')
+const path = require('path')
 const session = require('express-session')
 const router = require('./router')
 const app = express()
@@ -29,6 +30,10 @@ app.set('port', process.env.PORT || 3500)
 
 
 router(app)
+
+app.use(express.static(path.join(__dirname + '/public')))
+app.use('/home' ,express.static(path.join(__dirname + '/public')))
+app.use('/sala/:id' ,express.static(path.join(__dirname + '/public')))
 
 app.listen(app.get('port'), ()=>{
     console.log(`server listening in http://localhost:${app.get('port')}`)

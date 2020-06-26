@@ -4,7 +4,7 @@ const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./verifyToken')
 
-router.post('/users/signin', async(req, res, next) => {
+router.post('/api/users/signin', async(req, res, next) => {
     
     const { email, password } = req.body
 
@@ -36,9 +36,9 @@ router.post('/users/signin', async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/users/signup', async (req, res) => {
+router.post('/api/users/signup', async (req, res) => {
 
-    const { userName ,email, cc, phone, password, confirm_password } = req.body
+    const { userName ,email, dni, phone, password, confirm_password } = req.body
     
     if(userName === undefined || userName.length <= 4){
         return res.json({error: 'El Usuario Debe tener por lo menos 5 Caracteres'})
@@ -55,7 +55,7 @@ router.post('/users/signup', async (req, res) => {
     if(repitedEmail) {
         return res.json({error: 'Este email se encuentra registrado'})
     } else {
-        const newUser = new userModel({ userName, email, password })
+        const newUser = new userModel({ userName, email, phone, dni, password })
         newUser.password = await newUser.encryptPassword( password )
         await newUser.save()
 
@@ -73,7 +73,7 @@ router.post('/users/signup', async (req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.get('/me', verifyToken ,async(req, res, next) => {
+router.get('/api/me', verifyToken ,async(req, res, next) => {
 
     const user = await userModel.findById(req.userToken, {password: 0})
 

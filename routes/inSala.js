@@ -3,7 +3,7 @@ const router = express.Router()
 const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 
-router.post('/in-sala', verifyToken, async(req, res) => {  
+router.post('/api/in-sala', verifyToken, async(req, res) => {  
 
     const salaId = req.query.id 
     const userRoot = req.body.user
