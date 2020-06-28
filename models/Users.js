@@ -9,8 +9,8 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     wallet: {type: Number, default: 0},
     date: { type: Date, default: Date.now },
-    phone: {type: String, required: true},
-    dni: {type: String, required: true}
+    phone: {type: String},
+    dni: {type: String }
 })
 
   UserSchema.methods.encryptPassword = async password => {

@@ -65,11 +65,15 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
         .limit(perPage)
         .skip((perPage * page) - perPage)
 
-        const count = await salasModel.countDocuments({users: {$elemMatch: { user: req.userToken }}})
+        const count = await salasModel.countDocuments({users: {$elemMatch: { user: user.userName }}})
 
+        const totalfinal = Math.ceil(count / perPage)
+
+        console.log(count, totalfinal)
+        
         res.json({
             data: salas,
-            total: Math.ceil(count / perPage)
+            total: totalfinal
         })
     }
     catch(error){
@@ -117,4 +121,9 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
 
 })
 
-module.exports = router 
+router.post('/api/borrarsala', async(req, res) => {
+    const sala = await salasModel.findByIdAndDelete(req.body.id)
+    res.json(sala)
+})
+
+module.exports = router
