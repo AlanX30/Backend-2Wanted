@@ -67,7 +67,7 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
 
         const count = await salasModel.countDocuments({users: {$elemMatch: { user: user.userName }}})
 
-        const totalfinal = Math.ceil(count / perPage)
+        const totalfinal = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
 
         console.log(count, totalfinal)
         
