@@ -11,13 +11,13 @@ router.post('/api/users/signin', async(req, res, next) => {
     const user = await userModel.findOne({email: email})
     
     if (!user){
-        return res.json({auth: false, error: 'email doesnt exist'})
+        return res.json({auth: false, error: 'Email no registrado'})
     }
 
     const passwordValidate = await user.matchPassword(password)
 
     if (!passwordValidate){
-        return res.json({auth: false, error: 'Password incorrect'})
+        return res.json({auth: false, error: 'La contraseña es incorrecta'})
     }
 
     const token = jwt.sign({id: user._id}, 'SecretToken', {
@@ -35,27 +35,32 @@ router.post('/api/users/signin', async(req, res, next) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
+const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 
 router.post('/api/users/signup', async (req, res) => {
 
-    const { userName ,email, dni, phone, password, confirm_password } = req.body
+    const { userName ,email, dni, password, confirm_password } = req.body
     
-    if(userName === undefined || userName.length <= 4){
-        return res.json({error: 'El Usuario Debe tener por lo menos 5 Caracteres'})
+    if(userName === undefined || userName.length < 4){
+        return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres'})
     }
-    if(password === undefined || password.length <= 8 ){
-        return res.json({error: 'La contraseña Debe tener por lo menos 8 Caracteres'})
+    if(!reg_password.test(password)){
+        return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
     }
     if(confirm_password === undefined || password !== confirm_password){
-        return res.json({error:'Contraseñas no Coinciden'})
+        return res.json({error:'Las Contraseñas no Coinciden'})
     }
         
     const repitedEmail = await userModel.findOne({email: email})
+    const repitedDni = await userModel.findOne({dni: dni})
     
     if(repitedEmail) {
         return res.json({error: 'Este email se encuentra registrado'})
-    } else {
-        const newUser = new userModel({ userName, email, phone, dni, password })
+    }
+    if(repitedDni) {
+        return res.json({error: 'Este numero de identificacion se encuentra registrado'})
+    }else {
+        const newUser = new userModel({ userName, email, dni, password })
         newUser.password = await newUser.encryptPassword( password )
         await newUser.save()
 

@@ -27,9 +27,6 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
           name: "Jesus",
           surname: "Solano",
           email: user.email,
-          phone: {
-            number: user.phone
-          },
           identification: {
             type: "DNI",
             number: user.dni
