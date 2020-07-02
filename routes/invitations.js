@@ -10,6 +10,10 @@ router.post('/api/new-invitation', async(req, res, next) => {
     try {
         const { host, newUser, parentUsername, message, salaId, salaName } = req.body
         const price = parseFloat(req.body.price)
+
+        if(host === newUser){
+            return res.json({error: 'No te puedes enviar una invitacion'})
+        }
     
         const invitation = new invitationModel({
             user: newUser,
@@ -35,44 +39,50 @@ router.post('/api/new-invitation', async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 router.post('/api/invitations', verifyToken ,async(req, res, next) => {
+
+    try {
+        const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
+        const user = userById.userName
     
-    const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
-    const user = userById.userName
-
-    const noRead = await invitationModel.find({user: user, read: false})
+        const noRead = await invitationModel.find({user: user, read: false})
+        
+        const perPage = 6
+        let page  = req.body.page || 1
     
-    const perPage = 6
-    let page  = req.body.page || 1
-
-    const invitations = await invitationModel.find({user: user})
-    .sort({_id: -1})
-    .limit(perPage)
-    .skip((perPage * page) - perPage)
-
-    const count = await invitationModel.countDocuments({user: user})
-
-    res.json({
-        invitations: invitations,
-        countNotification: noRead.length,
-        totalPages: Math.ceil(count / perPage)
-    })
-
+        const invitations = await invitationModel.find({user: user})
+        .sort({_id: -1})
+        .limit(perPage)
+        .skip((perPage * page) - perPage)
+    
+        const count = await invitationModel.countDocuments({user: user})
+    
+        res.json({
+            invitations: invitations,
+            countNotification: noRead.length,
+            totalPages: Math.ceil(count / perPage)
+        })
+    }catch(error){
+        res.json({error: error})
+    }
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
 
-    const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
-    const user = userById.userName
-
-    const noRead = await invitationModel.find({user: user, read: false})
-
-    for(let i = 0; i < noRead.length; i++) {
-        noRead[i].read = true
-        await noRead[i].save()
+    try {
+        const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
+        const user = userById.userName
+    
+        const noRead = await invitationModel.find({user: user, read: false})
+    
+        for(let i = 0; i < noRead.length; i++) {
+            noRead[i].read = true
+            await noRead[i].save()
+        }
+    }catch(error){
+        res.json({error: error})
     }
-   
 })
 
 
