@@ -13,7 +13,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         const user = await userModel.findById(req.userToken, {password: 0})
         const newSala = new salasModel({ users, price, name, password, creator, protected })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
-
+        console.log(name.split(" ").length)
         if(user.wallet < price){
             return res.json({error: 'No hay dinero suficiente'})
         }
@@ -112,14 +112,14 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
         
-        if(repitedUser) {
-            return res.json({error: 'Ya perteneces a esta sala, puedes volver a entrar al completar la sala'})
+        if(repitedUser.users.length > 0) {
+            return res.json({error: 'Ya perteneces a esta sala, puedes volver a entrar al completarla'})
         }
         
         if(user.wallet < price.price){
             return res.json({error: 'No hay dinero suficiente'})
         }
-        if(!parent){
+        if(parent.users.length === 0){
             return res.json({error: 'No existe el padre usuario en esta sala'})
         }
         user.wallet = user.wallet - price.price
@@ -144,6 +144,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
         await parent.save()
     
         res.json({msg: 'Usuario agregado correctamente', id: salaId})
+        
     }catch(error){
         res.json({error: error})
     }
