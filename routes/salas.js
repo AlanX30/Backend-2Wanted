@@ -10,10 +10,11 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
     const protected = password ? true : false
 
     try {
+
         const user = await userModel.findById(req.userToken, {password: 0})
         const newSala = new salasModel({ users, price, name, password, creator, protected })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
-        console.log(name.split(" ").length)
+ 
         if(user.wallet < price){
             return res.json({error: 'No hay dinero suficiente'})
         }
@@ -25,7 +26,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         if(name.split(" ").length > 1 || name.length < 4){
             return  res.json({error: 'El nomnbre debe tener mas de 3 caracteres y no debe tener espacios'})
         }
-        if(price < 5000 ){
+        if(price < 5000 || req.body.price === '' || req.body.price === undefined ){
             return  res.json({error: 'Precio minimo de salas 5.000 COP'})
         }
     
@@ -44,9 +45,9 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
 router.post('/api/search/sala', verifyToken, async(req, res) =>{
     const { name, salaId } = req.body
 
-    /* if(name.split(" ").length > 1 ){
+    if(name.split(" ").length > 1 ){
         return res.json({error: 'No debe contener espacios'})
-    } */
+    }
 
     try{
         const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
