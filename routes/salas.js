@@ -44,12 +44,15 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
 
 router.post('/api/search/sala', verifyToken, async(req, res) =>{
     const { name, salaId } = req.body
-
-    if(name.split(" ").length > 1 ){
-        return res.json({error: 'No debe contener espacios'})
-    }
-
+   
     try{
+
+        if(name) {
+            if(name.split(" ").length > 1 ){
+                return res.json({error: 'No debe contener espacios'})
+            }
+        }
+
         const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
 
         if(salabyName){
