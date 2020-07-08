@@ -1,13 +1,41 @@
 const express = require('express')
+const socket = require('../socket')
 const router = express.Router()
 const invitationModel = require('../models/Invitations')
 const userModel = require('../models/Users')
-const jwt = require('jsonwebtoken')
+const ConectedModel = require('../models/Conected')
 const verifyToken = require('./verifyToken')
 
-router.post('/api/new-invitation', async(req, res, next) => {
+socket.socket.io.on('connection', async(data) => {
 
+    data.on('user_online', async(username) => {
+
+        data.username = username
+
+        const conected = await ConectedModel.findOne({userName: data.username})
+
+        if(!conected){
+            const new_conected = new ConectedModel({
+                userName: data.username,
+                socket: data.id
+            })
+            await new_conected.save() 
+        }
+
+    })
+
+    data.on('disconnect', async() => {
+        await ConectedModel.findOneAndDelete({userName: data.username})
+        await ConectedModel.findOneAndDelete({socket: data.id})
+    })
+    
+})
+
+router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
+    
+    
     try {
+
         const { host, newUser, parentUsername, message, salaId, salaName } = req.body
         const price = parseFloat(req.body.price)
 
@@ -27,10 +55,20 @@ router.post('/api/new-invitation', async(req, res, next) => {
         })
     
         await invitation.save()
+
+        const user_conected = await ConectedModel.findOne({userName: newUser})
+
+        if(user_conected){
+            if(socket.socket.io.sockets.connected[user_conected.socket]){
+                socket.socket.io.sockets.connected[user_conected.socket].emit('new_message', 1)
+            }
+        }
+
         res.json({msg: 'Invitacion Creada'})
 
+
     }catch(error){
-        res.json({error: error})
+        res.json({error: error.name})
     }
 
 })
@@ -41,6 +79,7 @@ router.post('/api/new-invitation', async(req, res, next) => {
 router.post('/api/invitations', verifyToken ,async(req, res, next) => {
 
     try {
+
         const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
         const user = userById.userName
     
@@ -80,6 +119,9 @@ router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
             noRead[i].read = true
             await noRead[i].save()
         }
+
+        res.json({msg: 'leidos reiniciados'})
+ 
     }catch(error){
         res.json({error: error})
     }
