@@ -7,9 +7,10 @@ const SalaSchema = new Schema({
     users: [
         { 
            user: {type: String},
+           space: {type: String, default: 'true'},
            childsId: {
                childId1: {type: String},
-               childId2: {type: String}
+               childId2: {type: String},
            },
            parentId: {type: String}
         }

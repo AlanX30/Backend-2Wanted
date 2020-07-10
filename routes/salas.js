@@ -23,8 +23,8 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
             return res.json({error: 'Ya hay una sala con este nombre'})
         }
 
-        if(name.split(" ").length > 1 || name.length < 4){
-            return  res.json({error: 'El nomnbre debe tener mas de 3 caracteres y no debe tener espacios'})
+        if(name.split(" ").length > 1 || name.length < 4 || name.length > 15){
+            return  res.json({error: 'El nomnbre debe tener mas de 3 caracteres, maximo 15, no debe tener espacios'})
         }
         if(price < 5000 || req.body.price === '' || req.body.price === undefined ){
             return  res.json({error: 'Precio minimo de salas 5.000 COP'})
@@ -108,14 +108,26 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
 
 router.post('/api/newUserInSala', verifyToken, async(req, res) => {
     
-    const { salaId, parentUser } = req.body
-
     try {
+
+        const { salaId, random } = req.body
+
+        let parentUser
+        
+        if(random){
+
+            const randomParent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { space: 'true' }}})
+
+            parentUser = randomParent.users[0].user
+            
+        }else{ parentUser = req.body.parentUser }   
+        
         const user = await userModel.findById(req.userToken, {password: 0})
         const price = await salasModel.findById(salaId, {price: 1, _id: 0})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
         
+
         if(repitedUser.users.length > 0) {
             return res.json({error: 'Ya perteneces a esta sala, puedes volver a entrar al completarla'})
         }
@@ -127,19 +139,25 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
             return res.json({error: 'No existe el padre usuario en esta sala'})
         }
         user.wallet = user.wallet - price.price
-        
+
         if(parent.users[0].childsId.childId1 === ''){
             parent.users[0].childsId.childId1 = user.userName
         }else if (parent.users[0].childsId.childId2 === ''){
+            parent.users[0].space = 'false'
+            await parent.save()
             parent.users[0].childsId.childId2 = user.userName
         }else{return res.json({error: 'El usuario padre esta lleno'})}
-        
     
         await salasModel.updateOne({_id: salaId}, {
             $push: {
                 'users': {
                     user: user.userName,
-                    parentId: parent.users[0].user
+                    space: 'true',
+                    parentId: parent.users[0].user,
+                    childsId: {
+                        childId1: '',
+                        childId2: ''
+                    }
                 }
             }
         }) 
