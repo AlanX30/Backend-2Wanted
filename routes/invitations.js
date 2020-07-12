@@ -33,7 +33,6 @@ socket.socket.io.on('connection', async(data) => {
 
 router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
     
-    
     try {
 
         const { host, newUser, parentUsername, message, salaId, salaName } = req.body
@@ -41,6 +40,12 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
 
         if(host === newUser){
             return res.json({error: 'No te puedes enviar una invitacion'})
+        }
+
+        const user = await userModel.findOne({userName: newUser}, {userName: 1})
+
+        if(!user){
+            return res.json({error: 'Este usuario no existe'})
         }
     
         const invitation = new invitationModel({

@@ -43,7 +43,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
 })
 
 router.post('/api/search/sala', verifyToken, async(req, res) =>{
-    const { name, salaId } = req.body
+    const { name, salaId, username } = req.body
    
     try{
 
@@ -59,17 +59,22 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
             return res.json({data: salabyName})
         }
         
-        const salaById = await salasModel.findOne({_id: salaId}, {password: 0, users:0})
-
+        const salaById = await salasModel.findById( salaId, {password: 0, users:0})
+   
         if(salaById){
-            return res.json({data: salaById})
+
+            const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: username }}})
+            
+            const parentUser = parent.users[0].parentId ? parent.users[0].parentId : 'Ninguno'
+
+            return res.json({data: salaById, parentId: parentUser})
         }
             
         res.json({error: 'No existe esta sala'})
         
     }
     catch(error){
-        res.json({error: error})
+        res.status(500).json({error: 'Error Interno'})
     }
     
 })
