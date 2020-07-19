@@ -47,6 +47,7 @@ router.post('/api/users/signup', async (req, res) => {
     if(!reg_password.test(password)){
         return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
     }
+
     if(confirm_password === undefined || password !== confirm_password){
         return res.json({error:'Las Contraseñas no Coinciden'})
     }
@@ -87,6 +88,50 @@ router.get('/api/me', verifyToken ,async(req, res, next) => {
     }
 
     res.json(user)
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
+
+    try{
+
+        const { newPassword ,password, newEmail, email } = req.body
+
+        if(password){
+
+            const user = await userModel.findById(req.userToken, {password: 1})
+
+            const passwordValidate = await user.matchPassword(password)
+
+            if (!passwordValidate){
+                return res.json({error: 'La contraseña es incorrecta'})
+            }
+
+            if(!reg_password.test(newPassword)){
+                return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+            }
+
+            user.password = await user.encryptPassword( newPassword )
+            
+            await user.save()
+
+            return res.json({msg: 'Contraseña actualizada correctamente'})
+        }
+        
+        if(email){
+            const user = await userModel.findById(req.userToken, {email: 1})
+
+            if(email === user.email){
+                user.email = newEmail
+                await user.save()
+                return res.json({msg: 'Email actualizado correctamente'})
+            }else{ res.json({error: 'Email actual no coincide'}) }
+
+        }else{res.json({error: 'Error interno'})}   
+
+    }catch(error){res.json({error: 'Error interno'})}
+
 })
 
 module.exports = router
