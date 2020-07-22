@@ -9,7 +9,15 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     wallet: {type: Number, default: 0},
     date: { type: Date, default: Date.now },
-    dni: {type: String, required: true }
+    dni: {type: String, required: true },
+    bank: {
+      titular: {type: String},
+      tipo: {type: String},
+      dni: {type: String},
+      banco: {type: String},
+      numeroCuenta: {type: String},
+      tipoCuenta: {type: String}
+    }
 })
 
   UserSchema.methods.encryptPassword = async password => {

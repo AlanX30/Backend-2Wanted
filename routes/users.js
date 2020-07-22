@@ -39,7 +39,7 @@ const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 
 router.post('/api/users/signup', async (req, res) => {
 
-    const { userName ,email, dni, password, confirm_password } = req.body
+    const { userName ,email, dni, password, confirm_password ,bank } = req.body
     
     if(userName === undefined || userName.length < 4){
         return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres'})
@@ -61,7 +61,7 @@ router.post('/api/users/signup', async (req, res) => {
     if(repitedDni) {
         return res.json({error: 'Este numero de identificacion se encuentra registrado'})
     }else {
-        const newUser = new userModel({ userName, email, dni, password })
+        const newUser = new userModel({ userName, email, dni, password, bank })
         newUser.password = await newUser.encryptPassword( password )
         await newUser.save()
 
@@ -132,6 +132,45 @@ router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
 
     }catch(error){res.json({error: 'Error interno'})}
 
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/edit/bankAccount', verifyToken , async(req, res, next) => {
+    try{
+
+        const { titular, tipo, dni, banco, numeroCuenta, tipoCuenta } = req.body
+
+        await userModel.findByIdAndUpdate(req.userToken, { bank: {
+            titular, tipo, dni, banco, numeroCuenta, tipoCuenta
+        }})
+
+        res.json({msg: 'Cuenta agregada correctamente'})
+
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/remove/bankAccount', verifyToken , async(req, res, next) => {
+    try{
+        const user = await userModel.findById(req.userToken, {bank: 1})
+        
+        user.bank = {
+            titular: ''
+        }
+
+        await user.save()
+
+        console.log(user)
+
+        res.json({msg: 'Cuenta eliminada Correctamente'})
+
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
 })
 
 module.exports = router
