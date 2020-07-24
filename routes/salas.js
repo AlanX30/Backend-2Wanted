@@ -4,6 +4,8 @@ const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
 
+const reg_whiteSpace = /^$|\s+/
+
 router.post('/api/new/sala', verifyToken ,async(req, res) => {
     const { users, name, password, creator } = req.body
     const price = parseFloat(req.body.price)
@@ -18,12 +20,12 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         if(user.wallet < price){
             return res.json({error: 'No hay dinero suficiente'})
         }
-
+        
         if(repitedName) {
             return res.json({error: 'Ya hay una sala con este nombre'})
         }
 
-        if(name.split(" ").length > 1 || name.length < 4 || name.length > 15){
+        if(reg_whiteSpace.test(name) || name.length < 4 || name.length > 15){
             return  res.json({error: 'El nomnbre debe tener mas de 3 caracteres, maximo 15, no debe tener espacios'})
         }
         if(price < 5000 || req.body.price === '' || req.body.price === undefined ){
@@ -43,12 +45,13 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
 })
 
 router.post('/api/search/sala', verifyToken, async(req, res) =>{
-    const { name, salaId, username } = req.body
-   
+    
     try{
 
+        const { name, salaId, username } = req.body
+
         if(name) {
-            if(name.split(" ").length > 1 ){
+            if( reg_whiteSpace.test(name) ){
                 return res.json({error: 'No debe contener espacios'})
             }
         }

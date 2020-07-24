@@ -4,6 +4,10 @@ const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./verifyToken')
 
+const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
+const reg_numbers = /^([0-9])*$/
+const reg_whiteSpace = /^$|\s+/
+
 router.post('/api/users/signin', async(req, res, next) => {
     
     const { email, password } = req.body
@@ -35,14 +39,13 @@ router.post('/api/users/signin', async(req, res, next) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 
 router.post('/api/users/signup', async (req, res) => {
 
     const { userName ,email, dni, password, confirm_password ,bank } = req.body
     
-    if(userName === undefined || userName.length < 4){
-        return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres'})
+    if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
+        return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres, sin espacios'})
     }
     if(!reg_password.test(password)){
         return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
@@ -140,6 +143,14 @@ router.post('/edit/bankAccount', verifyToken , async(req, res, next) => {
     try{
 
         const { titular, tipo, dni, banco, numeroCuenta, tipoCuenta } = req.body
+
+        if(!reg_numbers.test(dni)) {
+            res.json({error: 'Numero de identificacion solo debe contener numeros'})
+        }
+
+        if(!reg_numbers.test(numeroCuenta)) {
+            res.json({error: 'El numero de cuenta solo debe contener numeros'})
+        }
 
         await userModel.findByIdAndUpdate(req.userToken, { bank: {
             titular, tipo, dni, banco, numeroCuenta, tipoCuenta

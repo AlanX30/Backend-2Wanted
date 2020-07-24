@@ -37,20 +37,25 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
 
         const { host, newUser, parentUsername, message, salaId, salaName } = req.body
         const price = parseFloat(req.body.price)
-
+        
         if(host === newUser){
             return res.json({error: 'No te puedes enviar una invitacion'})
         }
 
-        const user = await userModel.findOne({userName: newUser}, {userName: 1})
+        if(message.length > 50){
+            return res.json({error: 'mensaje maximo de 50 caracteres'})
+        }
+
+        const user = await userModel.findOne({userName: newUser}, {userName: 1, notifications: 1})
 
         if(!user){
             return res.json({error: 'Este usuario no existe'})
         }
+
+        user.notifications = user.notifications + 1
     
         const invitation = new invitationModel({
             user: newUser,
-            read: false,
             host,
             parentUsername,
             message,
@@ -60,9 +65,10 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
         })
     
         await invitation.save()
+        await user.save()
 
         const user_conected = await ConectedModel.findOne({userName: newUser})
-
+        
         if(user_conected){
             if(socket.socket.io.sockets.connected[user_conected.socket]){
                 socket.socket.io.sockets.connected[user_conected.socket].emit('new_message', 1)
@@ -85,10 +91,8 @@ router.post('/api/invitations', verifyToken ,async(req, res, next) => {
 
     try {
 
-        const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
+        const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0, notifications: 1})
         const user = userById.userName
-    
-        const noRead = await invitationModel.find({user: user, read: false})
         
         const perPage = 6
         let page  = req.body.page || 1
@@ -102,7 +106,7 @@ router.post('/api/invitations', verifyToken ,async(req, res, next) => {
     
         res.json({
             invitations: invitations,
-            countNotification: noRead.length,
+            countNotification: userById.notifications,
             totalPages: Math.ceil(count / perPage)
         })
     }catch(error){
@@ -115,15 +119,11 @@ router.post('/api/invitations', verifyToken ,async(req, res, next) => {
 router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
 
     try {
-        const userById = await userModel.findById(req.userToken, {userName: 1 ,_id: 0})
-        const user = userById.userName
-    
-        const noRead = await invitationModel.find({user: user, read: false})
-    
-        for(let i = 0; i < noRead.length; i++) {
-            noRead[i].read = true
-            await noRead[i].save()
-        }
+        const user = await userModel.findById(req.userToken, {notifications: 1})
+        
+        user.notifications = 0
+
+        user.save()
 
         res.json({msg: 'leidos reiniciados'})
  

@@ -10,7 +10,6 @@ const InvitationsSchema = new Schema({
     price: {type: Number },
     salaId: {type: Schema.Types.ObjectId, ref: 'Salas' },
     salaName: {type: String },
-    read: {type: Boolean, default: false}
 })
 
 module.exports = mongoose.model('Invitations', InvitationsSchema)
