@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 });
 
 
-app.set('port', process.env.PORT )
+app.set('port', process.env.PORT || 5000)
 
 /* ------------Router--------------------------------- */
 
