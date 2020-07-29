@@ -2,11 +2,11 @@ const express = require('express')
 const mercadopago = require('mercadopago')
 const router = express.Router()
 const userModel = require('../models/Users')
-const axios = require('axios')
 const verifyToken = require('./verifyToken')
+const axios = require('axios')
 
 mercadopago.configure({
-    access_token: 'TEST-2905880522539926-062322-eb21e42e5d09ff86c0eae6c47d091fc2-589507581'
+    access_token: 'APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396'
 })
 
 router.post('/api/payments', verifyToken , async(req, res, next) => {
@@ -33,9 +33,9 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
           },
         },
         back_urls: {
-          success: "https://www.tu-sitio/success",
-          failure: "http://www.tu-sitio/failure",
-          pending: "http://www.tu-sitio/pending"
+          success: "https://2wanted.com",
+          failure: "http://2wanted.com/failure",
+          pending: "http://2wanted.com/pending"
       },
       auto_return: "approved",
       taxes: [
@@ -60,17 +60,29 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 router.post('/api/notification-payment', async(req, res, next) => {
-  const {topic, id} = req.query
 
-  console.log(topic, id)
+  try{
 
-  await axios({
-    url: `https://api.mercadopago.com/v1/payments/:${id}?access_token=TEST-2905880522539926-062322-eb21e42e5d09ff86c0eae6c47d091fc2-589507581`
-  }).then(res=>console.log(res))
+    const {topic, id} = req.query
+  
+    const ipn = await axios(
+      `https://api.mercadopago.com/v1/payments/:${id}?access_token=APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396`
+    )
 
-  res.status(200)
+    console.log(ipn)
 
-})
+    /* if(ipn.status === approved && ipn.status_detail === accredited) {
+      
+    } */
+  
+    res.status(200).send('OK')
+      
+  }catch(error){
+    res.status(200).json(error)
+  }
+
+  })
+
 
 /* ------------------------------------------------------------------------------------------------------- */
 
