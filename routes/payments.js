@@ -67,16 +67,18 @@ router.post('/api/notification-payment', async(req, res, next) => {
   
     await axios.get(
       `https://api.mercadopago.com/v1/payments/${id}?access_token=APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396`
-    ).then( res => {
+    ).then( async res => {
 
       console.log(res.data)
 
       const data = res.data
 
       if(data.status_detail === 'accredited') {
-        const user = await userModel.findOne({email: data.payer.email}, { wallet: 1 })
-        user.wallet = user.wallet + data.transaction_amount
-        await user.save()
+
+          const user = await userModel.findOne({email: data.payer.email}, { wallet: 1 })
+          user.wallet = user.wallet + data.transaction_amount
+          await user.save()
+
       }
 
     }).catch(error => console.log(error))
