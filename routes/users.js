@@ -28,6 +28,8 @@ router.post('/api/users/signin', async(req, res, next) => {
         expiresIn: 60 * 60 * 24
     });
 
+    console.log('Tu sabes que lo que vale mia naguevona')
+
     res.status(200).json({
             auth: true,
             userName: user.userName,
