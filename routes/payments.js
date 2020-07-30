@@ -67,11 +67,9 @@ router.post('/api/notification-payment', async(req, res, next) => {
 
     console.log(topic, id)
   
-    const ipn = await axios(
-      `https://api.mercadopago.com/v1/payments/:${id}?access_token=APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396`
-    )
-
-    console.log(ipn)
+    await axios.get(
+      `https://api.mercadopago.com/v1/payments/${id}?access_token=APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396`
+    ).then(res => console.log(res)).catch(error => console.log(error))
 
     /* if(ipn.status === approved && ipn.status_detail === accredited) {
       
