@@ -3,6 +3,8 @@ const router = express.Router()
 const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./verifyToken')
+const balanceUserModel = require('../models/BalanceUser')
+const moment = require('moment')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_numbers = /^([0-9])*$/
@@ -27,8 +29,6 @@ router.post('/api/users/signin', async(req, res, next) => {
     const token = jwt.sign({id: user._id}, 'SecretToken', {
         expiresIn: 60 * 60 * 24
     });
-
-    console.log('Tu sabes que lo que vale mia naguevona')
 
     res.status(200).json({
             auth: true,
@@ -177,13 +177,57 @@ router.post('/remove/bankAccount', verifyToken , async(req, res, next) => {
 
         await user.save()
 
-        console.log(user)
-
         res.json({msg: 'Cuenta eliminada Correctamente'})
 
     }catch(error){
         res.json({error: 'Error interno'})
     }
 })
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/userbalance', verifyToken, async(req, res, next) => {
+    try{
+
+        const { getFechaInicial, getFechaFinal } = req.body
+
+        if(getFechaFinal && getFechaInicial){
+
+            const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
+
+            const fechaInicial = new Date(getFechaInicial)
+    
+            const fechaFinal = new Date (getFechaFinal)
+        
+            const fechaBalance = await balanceUserModel.find({$and: [ {user: user.userName, date: {$gte: fechaInicial}},{date: {$lt: fechaFinal}}]})
+
+            res.json({data: fechaBalance})
+
+        }else{
+
+            const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
+
+            const lastestBalance = await balanceUserModel.find({user: user.userName}).sort({_id: -1}).limit(10)
+            
+            res.json({data: lastestBalance})
+
+        }
+
+    }catch(error){
+        console.log(error)
+        res.json({error: 'Error interno'})
+    }
+})
+
+router.post('/pruebafecha', verifyToken, async(req, res, next) => {
+    
+
+
+    console.log(fechaInicial)
+    console.log(fechaFinal)
+
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
 
 module.exports = router

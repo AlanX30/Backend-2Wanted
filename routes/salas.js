@@ -3,6 +3,7 @@ const router = express.Router()
 const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
+const balanceUserModel = require('../models/BalanceUser')
 
 const reg_whiteSpace = /^$|\s+/
 
@@ -14,7 +15,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
     try {
 
         const user = await userModel.findById(req.userToken, {password: 0})
-        const newSala = new salasModel({ users, price, name, password, creator, protected })
+        const newSala = await new salasModel({ users, price, name, password, creator, protected })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
  
         if(user.wallet < price){
@@ -33,14 +34,25 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         }
     
         user.wallet = user.wallet - price
-    
+
         await user.save()
         await newSala.save()
+
+        const balanceSala = await new balanceUserModel({ 
+            user: user.userName,
+            salaName: newSala.name,
+            salaPrice: price,
+            accumulated: 0,
+            type: 'buy',
+            wallet: user.wallet,
+        })
     
+        await balanceSala.save()
+
         res.json({msg: 'Sala creada correctamente', id: newSala._id})
 
     }catch(error){
-        res.json({error: error})
+        res.json({error: 'Error interno'})
     }
 })
 
@@ -131,7 +143,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
         }else{ parentUser = req.body.parentUser }   
         
         const user = await userModel.findById(req.userToken, {password: 0})
-        const price = await salasModel.findById(salaId, {price: 1, _id: 0})
+        const price = await salasModel.findById(salaId, {price: 1, name: 1, _id: 0})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
         
@@ -172,6 +184,17 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
     
         await user.save()
         await parent.save()
+
+        const balanceSala = await new balanceUserModel({ 
+            user: user.userName,
+            salaName: price.name,
+            accumulated: 0,
+            type: 'buy',
+            wallet: user.wallet,
+            salaPrice: price.price,
+        })
+
+        await balanceSala.save()
     
         res.json({msg: 'Usuario agregado correctamente', id: salaId})
         

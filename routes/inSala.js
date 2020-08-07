@@ -1,7 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const salasModel = require('../models/Salas')
+const userModel = require('../models/Users')
+const balanceUserModel = require('../models/BalanceUser')
 const verifyToken = require('./verifyToken')
+
 
 router.post('/api/in-sala', verifyToken, async(req, res) => {  
 
@@ -9,7 +12,6 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     const userRoot = req.body.user
 
     /* ------------------------Nivel 1------------------------------------------------------------------------------- */
-
 
     try{
     
@@ -138,6 +140,53 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16
     ]
     
+    const salaPrice = await salasModel.findById(salaId, { price: 1, name: 1 })
+    const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot})
+    .sort({_id: -1})
+    const user = await userModel.findOne({userName: userRoot}, { wallet: 1 })
+    
+    let acum3 = 0
+    let acum4 = 0   
+    
+    for(let i = 6; i<=13; i++) {
+        let divide = salaPrice.price/2   
+        if(allData[i]){
+            acum3 = acum3 + divide
+        }
+    }
+   
+    for(let i = 14; i<=29; i++){
+        let divide = salaPrice.price/4  
+        if(allData[i]){
+            acum4 = acum4 + divide
+        }
+    }
+    
+    const tAcum = acum3 + acum4
+    let newCash = 0 
+    
+    if(tAcum > balanceSala.accumulated){
+        newCash = tAcum - balanceSala.accumulated
+    }
+
+    if(newCash > 0){
+
+        user.wallet = user.wallet + newCash
+
+        const newBalance = await new balanceUserModel({ 
+            user: userRoot,
+            salaName: salaPrice.name,
+            accumulated: tAcum,
+            won: newCash,
+            type: 'won',
+            wallet: user.wallet,
+        })
+
+        await user.save()
+        await newBalance.save()
+
+    }
+
     res.json(allData)
     
     }
@@ -145,6 +194,6 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         res.send(error)
     }
     
-    })
+})
     
     module.exports = router 
