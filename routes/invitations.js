@@ -13,20 +13,19 @@ socket.socket.io.on('connection', async(data) => {
         data.username = username
 
         const conected = await ConectedModel.findOne({userName: data.username})
-
-        if(!conected){
+        
+        if(conected === null || conected === undefined){
+            
             const new_conected = new ConectedModel({
                 userName: data.username,
                 socket: data.id
             })
             await new_conected.save() 
         }
-
     })
 
     data.on('disconnect', async() => {
-        await ConectedModel.findOneAndDelete({userName: data.username})
-        await ConectedModel.findOneAndDelete({socket: data.id})
+        await ConectedModel.findOneAndRemove({userName: data.username})
     })
     
 })

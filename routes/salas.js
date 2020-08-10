@@ -4,18 +4,18 @@ const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
+const mongoXlsx = require('mongo-xlsx');
 
 const reg_whiteSpace = /^$|\s+/
 
 router.post('/api/new/sala', verifyToken ,async(req, res) => {
-    const { users, name, password, creator } = req.body
+    const { users, name, creator } = req.body
     const price = parseFloat(req.body.price)
-    const protected = password ? true : false
 
     try {
 
         const user = await userModel.findById(req.userToken, {password: 0})
-        const newSala = await new salasModel({ users, price, name, password, creator, protected })
+        const newSala = await new salasModel({ users, price, name, creator, usersNumber: 1, paidUsers: 0 })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
  
         if(user.wallet < price){
@@ -38,7 +38,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         await user.save()
         await newSala.save()
 
-        const balanceSala = await new balanceUserModel({ 
+        const balanceSala = new balanceUserModel({ 
             user: user.userName,
             salaName: newSala.name,
             salaPrice: price,
@@ -75,6 +75,7 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
         }
         
         const salaById = await salasModel.findById( salaId, {password: 0, users:0})
+
    
         if(salaById){
 
@@ -82,7 +83,10 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
             
             const parentUser = parent.users[0].parentId ? parent.users[0].parentId : 'Ninguno'
 
-            return res.json({data: salaById, parentId: parentUser})
+            const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: username})
+            .sort({_id: -1})
+
+            return res.json({data: salaById, parentId: parentUser, inBalance: balanceUser.accumulated})
         }
             
         res.json({error: 'No existe esta sala'})
@@ -95,18 +99,18 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
 })
 
 router.post('/api/search/listSalas', verifyToken, async(req, res) => {
-
-    const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
-
-    const perPage = 5
-    let page  = req.body.page || 1
     
-    if(page < 1){
-        page = 1
-    }
-   
     try{
+
+        const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
+
+        const perPage = 5
+        let page  = req.body.page || 1
         
+        if(page < 1){
+            page = 1
+        }
+   
         const salas = await salasModel.find({ users: {$elemMatch: { user: user.userName }} }, {name: 1, price: 1, creator: 1})
         .sort({_id: -1})
         .limit(perPage)
@@ -143,7 +147,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
         }else{ parentUser = req.body.parentUser }   
         
         const user = await userModel.findById(req.userToken, {password: 0})
-        const price = await salasModel.findById(salaId, {price: 1, name: 1, _id: 0})
+        const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
         
@@ -177,11 +181,13 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
                     childsId: {
                         childId1: '',
                         childId2: ''
-                    }
+                    },
                 }
             }
         }) 
-    
+
+        price.usersNumber = price.usersNumber + 1
+
         await user.save()
         await parent.save()
 
@@ -195,17 +201,62 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
         })
 
         await balanceSala.save()
+        await price.save()
     
         res.json({msg: 'Usuario agregado correctamente', id: salaId})
         
     }catch(error){
-        res.json({error: error})
+        res.json({error: 'Error Interno'})
+    }
+})
+
+router.post('/api/balance2wanted', async(req, res) => {
+
+    try {
+        const balance = await salasModel.find({}, {users: 0, creator: 0}).sort({_id: -1})
+    
+        var dataBalance = []
+    
+        for(let i = 0; i < balance.length; i++){
+    
+            let line123 = balance[i].usersNumber <= 7 ? balance[i].usersNumber * balance[i].price : balance[i].price * 7
+            let line4 = balance[i].usersNumber > 7 && balance[i].usersNumber < 15 ? (balance[i].usersNumber - 7) * (balance[i].price / 2) : balance[i].usersNumber > 15 ? balance[i].price * 4 : 0
+            let nextLines = balance[i].usersNumber > 15 ? (balance[i].usersNumber - 15) * (balance[i].price / 4) : 0
+    
+            console.log(line123, line4, nextLines)
+    
+            const data = {
+                Nombre_de_Sala: balance[i].name,
+                Usuarios: balance[i].usersNumber,
+                Valor_de_Sala: balance[i].price,
+                Acumulado_en_Sala: balance[i].usersNumber * balance[i].price,
+                Dinero_ganado_por_usuarios: balance[i].paidUsers,
+                Linea_1_2_3: line123,
+                Linea_4: line4,
+                Linea_5_en_adelante: nextLines,
+                Total_Ganancias: line123 + line4 + nextLines
+            }
+            dataBalance.push(data)
+        }
+    
+        const model = mongoXlsx.buildDynamicModel(dataBalance);
+    
+        mongoXlsx.mongoData2Xlsx(dataBalance, model, function(err, data) {
+            console.log('File saved at:', data.fullPath); 
+          });
+    
+        res.json(balance)
+
+    }catch(error){
+        res.json({error: 'Error Interno'})
     }
 })
 
 router.post('/api/borrarsala', async(req, res) => {
     const sala = await salasModel.findByIdAndDelete(req.body.id)
+    
     res.json(sala)
+
 })
 
 module.exports = router

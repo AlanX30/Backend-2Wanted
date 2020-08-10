@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 
 const Conected = new Schema({
-    userName: {type: String},
+    userName: {type: String, unique: true},
     socket: {type: String}
 })
 
