@@ -18,7 +18,7 @@ const SalaSchema = new Schema({
     price: { type: Number },
     name: { type: String, unique: true },
     creator: {type: String},
-    usersNumber: { type: Number },
+    usersNumber: { type: Number, default: 0 },
     paidUsers: { type: Number }
 })
 

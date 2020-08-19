@@ -187,9 +187,17 @@ router.post('/remove/bankAccount', verifyToken , async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 router.post('/api/userbalance', verifyToken, async(req, res, next) => {
+    
     try{
 
         const { getFechaInicial, getFechaFinal } = req.body
+        
+        const perPage = 5
+        let page  = req.body.page || 1
+        
+        if(page < 1){
+            page = 1
+        }
 
         if(getFechaFinal && getFechaInicial){
 
@@ -200,33 +208,35 @@ router.post('/api/userbalance', verifyToken, async(req, res, next) => {
             const fechaFinal = new Date (getFechaFinal)
         
             const fechaBalance = await balanceUserModel.find({$and: [ {user: user.userName, date: {$gte: fechaInicial}},{date: {$lt: fechaFinal}}]})
+            .limit(perPage).skip((perPage * page) - perPage)
+            
+            const count = await balanceUserModel.countDocuments({$and: [ {user: user.userName, date: {$gte: fechaInicial}},{date: {$lt: fechaFinal}}]})
 
-            res.json({data: fechaBalance})
+            const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
+
+            res.json({data: fechaBalance, totalPages})
 
         }else{
 
             const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
 
-            const lastestBalance = await balanceUserModel.find({user: user.userName}).sort({_id: -1}).limit(10)
-            
-            res.json({data: lastestBalance})
+            const count = await balanceUserModel.countDocuments({user: user.userName})
+
+            const lastestBalance = await balanceUserModel.find({user: user.userName})
+            .sort({_id: -1}).limit(perPage).skip((perPage * page) - perPage)
+
+            const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
+
+            res.json({data: lastestBalance, totalPages})
 
         }
 
     }catch(error){
-        console.log(error)
         res.json({error: 'Error interno'})
     }
 })
 
-router.post('/pruebafecha', verifyToken, async(req, res, next) => {
-    
 
-
-    console.log(fechaInicial)
-    console.log(fechaFinal)
-
-})
 
 /* ------------------------------------------------------------------------------------------------------- */
 

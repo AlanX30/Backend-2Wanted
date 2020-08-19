@@ -140,9 +140,8 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8,
         child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16
     ]
-
     if(toBalance === 'true'){
-        const salaPrice = await salasModel.findById(salaId, {salaPrice: 1, price: 1, name: 1 })
+        const salaPrice = await salasModel.findById(salaId, {paidUsers: 1, salaPrice: 1, price: 1, name: 1 })
         const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot})
         .sort({_id: -1})
         const user = await userModel.findOne({userName: userRoot}, { wallet: 1 })
@@ -156,7 +155,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
                 acum3 = acum3 + divide
             }
         }
-       
+        
         for(let i = 14; i<=29; i++){
             let divide = salaPrice.price/4  
             if(allData[i]){
@@ -170,12 +169,12 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         if(tAcum > balanceSala.accumulated){
             newCash = tAcum - balanceSala.accumulated
         }
-    
+        
         if(newCash > 0){
-    
+            
             user.wallet = user.wallet + newCash
             salaPrice.paidUsers = salaPrice.paidUsers + newCash
-    
+            
             const newBalance = await new balanceUserModel({ 
                 user: userRoot,
                 salaName: salaPrice.name,
@@ -184,10 +183,12 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
                 type: 'won',
                 wallet: user.wallet,
             })
-
+            
             await salaPrice.save()
             await user.save()
             await newBalance.save()
+            
+            res.json({msg: 'Transaccion correcta'})
     
         }
     }else{

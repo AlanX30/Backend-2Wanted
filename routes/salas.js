@@ -43,6 +43,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
             salaName: newSala.name,
             salaPrice: price,
             accumulated: 0,
+            usersNumber: 0,
             type: 'buy',
             wallet: user.wallet,
         })
@@ -188,6 +189,8 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
 
         price.usersNumber = price.usersNumber + 1
 
+        price.accumulated = price.accumulated + price.price
+
         await user.save()
         await parent.save()
 
@@ -222,8 +225,6 @@ router.post('/api/balance2wanted', async(req, res) => {
             let line123 = balance[i].usersNumber <= 7 ? balance[i].usersNumber * balance[i].price : balance[i].price * 7
             let line4 = balance[i].usersNumber > 7 && balance[i].usersNumber < 15 ? (balance[i].usersNumber - 7) * (balance[i].price / 2) : balance[i].usersNumber > 15 ? balance[i].price * 4 : 0
             let nextLines = balance[i].usersNumber > 15 ? (balance[i].usersNumber - 15) * (balance[i].price / 4) : 0
-    
-            console.log(line123, line4, nextLines)
     
             const data = {
                 Nombre_de_Sala: balance[i].name,
