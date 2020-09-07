@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const salasModel = require('../models/Salas')
 const verifyToken = require('./verifyToken')
+const positions = require('./positions')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
 const mongoXlsx = require('mongo-xlsx');
@@ -131,7 +132,7 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
     }
 })
 
-router.post('/api/newUserInSala', verifyToken, async(req, res) => {
+router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
     
     try {
 
@@ -203,6 +204,8 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
             salaPrice: price.price,
         })
 
+        positions(req, res, next)
+
         await balanceSala.save()
         await price.save()
     
@@ -213,47 +216,8 @@ router.post('/api/newUserInSala', verifyToken, async(req, res) => {
     }
 })
 
-router.post('/api/balance2wanted', async(req, res) => {
-
-    try {
-        const balance = await salasModel.find({}, {users: 0, creator: 0}).sort({_id: -1})
-    
-        var dataBalance = []
-    
-        for(let i = 0; i < balance.length; i++){
-    
-            let line123 = balance[i].usersNumber <= 7 ? balance[i].usersNumber * balance[i].price : balance[i].price * 7
-            let line4 = balance[i].usersNumber > 7 && balance[i].usersNumber < 15 ? (balance[i].usersNumber - 7) * (balance[i].price / 2) : balance[i].usersNumber > 15 ? balance[i].price * 4 : 0
-            let nextLines = balance[i].usersNumber > 15 ? (balance[i].usersNumber - 15) * (balance[i].price / 4) : 0
-    
-            const data = {
-                Nombre_de_Sala: balance[i].name,
-                Usuarios: balance[i].usersNumber,
-                Valor_de_Sala: balance[i].price,
-                Acumulado_en_Sala: balance[i].usersNumber * balance[i].price,
-                Dinero_ganado_por_usuarios: balance[i].paidUsers,
-                Linea_1_2_3: line123,
-                Linea_4: line4,
-                Linea_5_en_adelante: nextLines,
-                Total_Ganancias: line123 + line4 + nextLines
-            }
-            dataBalance.push(data)
-        }
-    
-        const model = mongoXlsx.buildDynamicModel(dataBalance);
-    
-        mongoXlsx.mongoData2Xlsx(dataBalance, model, function(err, data) {
-            console.log('File saved at:', data.fullPath); 
-          });
-    
-        res.json(balance)
-
-    }catch(error){
-        res.json({error: 'Error Interno'})
-    }
-})
-
 router.post('/api/borrarsala', async(req, res) => {
+    
     const sala = await salasModel.findByIdAndDelete(req.body.id)
     
     res.json(sala)

@@ -19,7 +19,9 @@ const SalaSchema = new Schema({
     name: { type: String, unique: true },
     creator: {type: String},
     usersNumber: { type: Number, default: 0 },
-    paidUsers: { type: Number }
+    paidUsers: { type: Number },
+    line123: { type: Number },
+    line4: { type: Number }
 })
 
 SalaSchema.methods.encryptPassword = async password => {
