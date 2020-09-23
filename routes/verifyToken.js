@@ -7,7 +7,7 @@ const verifyToken = (req, res, next) => {
         return res.status(401).json({auth: 'false', error: 'No token provided'})
     }
 
-    const decodedToken = jwt.verify(token, 'SecretToken')
+    const decodedToken = jwt.verify(token, process.env.SECRET_JSONWEBTOKEN)
 
     req.userToken = decodedToken.id
 

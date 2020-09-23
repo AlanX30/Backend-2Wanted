@@ -140,6 +140,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8,
         child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16
     ]
+    
     if(toBalance === 'true'){
         const salaPrice = await salasModel.findById(salaId, {paidUsers: 1, salaPrice: 1, price: 1, name: 1 })
         const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot})

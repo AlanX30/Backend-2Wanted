@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const URI = "mongodb+srv://AlanX30:A31232723s@piramide-fxv0x.mongodb.net/test?retryWrites=true&w=majority"
+const URI = process.env.DB_URI
 
 mongoose.connect(URI, {
     useCreateIndex: true,

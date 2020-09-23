@@ -26,7 +26,7 @@ router.post('/api/users/signin', async(req, res, next) => {
         return res.json({auth: false, error: 'La contraseña es incorrecta'})
     }
 
-    const token = jwt.sign({id: user._id}, 'SecretToken', {
+    const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
         expiresIn: 60 * 60 * 24
     });
 
@@ -70,7 +70,7 @@ router.post('/api/users/signup', async (req, res) => {
         newUser.password = await newUser.encryptPassword( password )
         await newUser.save()
 
-        const token = jwt.sign({id: newUser._id}, 'SecretToken', {
+        const token = jwt.sign({id: newUser._id}, process.env.SECRET_JSONWEBTOKEN, {
             expiresIn: 60 * 60 * 24
         })
 

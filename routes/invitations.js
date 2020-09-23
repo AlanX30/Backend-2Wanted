@@ -14,8 +14,7 @@ socket.socket.io.on('connection', async(data) => {
 
         const conected = await ConectedModel.findOne({userName: data.username})
         
-        if(conected === null || conected === undefined){
-            
+        if(!conected){
             const new_conected = new ConectedModel({
                 userName: data.username,
                 socket: data.id

@@ -7,7 +7,7 @@ const balanceUserModel = require('../models/BalanceUser')
 const axios = require('axios')
 
 mercadopago.configure({
-    access_token: 'APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396'
+    access_token: process.env.MERCADOPAGO_ACCESS_TOKEN
 })
 
 router.post('/api/payments', verifyToken , async(req, res, next) => {
@@ -67,7 +67,7 @@ router.post('/api/notification-payment', async(req, res, next) => {
     const { id } = req.query
   
     await axios.get(
-      `https://api.mercadopago.com/v1/payments/${id}?access_token=APP_USR-3607827864573449-052713-45658c68540d38f5cd26871951e4480b-209450396`
+      `https://api.mercadopago.com/v1/payments/${id}?access_token=${process.env.MERCADOPAGO_ACCESS_TOKEN}`
     ).then( async res => {
 
       const data = res.data

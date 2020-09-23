@@ -67,72 +67,13 @@ const positions = async (req, res, next) => {
         }
     
     /* ------------------------/Nivel 3------------------------------------------------------------------------------- */
-    /* ------------------------Nivel 4------------------------------------------------------------------------------- */
     
-        if (child4_1){
-            var parent4_1 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_1 }}})
-          
-    
-            var child5_1 = parent4_1.users[0].childsId.childId1
-            var child5_2 = parent4_1.users[0].childsId.childId2
-        }
-        if(child4_2){
-            var parent4_2 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_2 }}})
-          
-    
-            var child5_3 = parent4_2.users[0].childsId.childId1
-            var child5_4 = parent4_2.users[0].childsId.childId2
-        }
-        if(child4_3){
-            var parent4_3 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_3 }}})
-         
-    
-            var child5_5 = parent4_3.users[0].childsId.childId1
-            var child5_6 = parent4_3.users[0].childsId.childId2
-        }
-        if(child4_4){
-            var parent4_4 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_4 }}})
-          
-    
-            var child5_7 = parent4_4.users[0].childsId.childId1
-            var child5_8 = parent4_4.users[0].childsId.childId2
-        }
-        if(child4_5){
-            var parent4_5 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_5 }}})
-        
-            
-            var child5_9 = parent4_5.users[0].childsId.childId1
-            var child5_10 = parent4_5.users[0].childsId.childId2
-        }
-        if(child4_6){
-            var parent4_6 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_6 }}})
-    
-    
-            var child5_11 = parent4_6.users[0].childsId.childId1
-            var child5_12 = parent4_6.users[0].childsId.childId2
-        }
-        if(child4_7){
-            var parent4_7 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_7 }}})
-            
-    
-            var child5_13 = parent4_7.users[0].childsId.childId1
-            var child5_14 = parent4_7.users[0].childsId.childId2
-        }
-        if(child4_8){
-            var parent4_8 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: child4_8 }}})
-    
-            var child5_15 = parent4_8.users[0].childsId.childId1
-            var child5_16 = parent4_8.users[0].childsId.childId2
-        }
-    
-    /* ------------------------/Nivel 4------------------------------------------------------------------------------- */
     
     
     const allData = [
         child2_1,child2_2,
         child3_1,child3_2,child3_3,child3_4,
-        child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8,
-        child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16
+        child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8
     ]
 
     let line123 = 1

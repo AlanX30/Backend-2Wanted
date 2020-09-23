@@ -5,7 +5,6 @@ const verifyToken = require('./verifyToken')
 const positions = require('./positions')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
-const mongoXlsx = require('mongo-xlsx');
 
 const reg_whiteSpace = /^$|\s+/
 
@@ -214,14 +213,6 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
     }catch(error){
         res.json({error: 'Error Interno'})
     }
-})
-
-router.post('/api/borrarsala', async(req, res) => {
-    
-    const sala = await salasModel.findByIdAndDelete(req.body.id)
-    
-    res.json(sala)
-
 })
 
 module.exports = router

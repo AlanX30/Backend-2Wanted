@@ -4,7 +4,7 @@ const socket = require('./socket')
 const app = express()
 const bodyParser = require('body-parser')
 const path = require('path')
-const session = require('express-session')
+require('dotenv').config()
 require('./database')
 
 ///* ------------Socket init--------------------------------- */
@@ -12,14 +12,8 @@ require('./database')
 const server = http.createServer(app)
 socket.connect(server)
 
-
 ///* ------------Middlewares--------------------------------- */
 
-app.use(session({
-    secret: 'mysecretapp',
-    resave: true,
-    saveUninitialized: true
-}))
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
