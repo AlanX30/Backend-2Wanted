@@ -1,0 +1,50 @@
+const withdrawInProcces = `
+<head>
+    <style>
+        .title {
+            color: white;
+        }
+        .body {
+            background: linear-gradient(to left, #f46b45, #eea849);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            background: #343a40;
+            border-radius: 10px;
+            margin: 60px auto 50px;
+            padding: 25px;
+            border: 4px solid #212529;
+            box-shadow: 0 -1px 8px #000;
+        }
+        .logo1 {
+            height: 55px;
+        }
+        .logo2 {
+            height: 30px;
+            margin-top: 21px;
+            margin-left: 4px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="body">
+    <div class="container">
+    <div class="logos-container">
+        <img class="logo1" src="https://i.ibb.co/rcGw6hh/logo-1.png" alt="logo-1" border="0">
+        <img class="logo2" src="https://i.ibb.co/6FQ2zHT/2WANTED.png" alt="2WANTED" border="0" />
+    </div>
+    <h1 class="title">Retiro 2Wanted en Proceso</h1>
+</div>
+    </div>
+</body>
+`
+
+module.exports = {
+    withdrawInProcces
+}

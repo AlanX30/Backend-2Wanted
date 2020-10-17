@@ -15,7 +15,7 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
     try {
 
         const user = await userModel.findById(req.userToken, {password: 0})
-        const newSala = await new salasModel({ users, price, name, creator, usersNumber: 1, paidUsers: 0 })
+        const newSala = await new salasModel({ users, price, name, creator, usersNumber: 1, paidUsers: 0, line123: 1, line4: 0 })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
  
         if(user.wallet < price){
@@ -38,9 +38,12 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         await user.save()
         await newSala.save()
 
-        const balanceSala = new balanceUserModel({ 
+        const balanceSala = await new balanceUserModel({ 
             user: user.userName,
             salaName: newSala.name,
+            salaId: newSala._id,
+            salaActive: true,
+            salaCreator: creator,
             salaPrice: price,
             accumulated: 0,
             usersNumber: 0,
@@ -111,13 +114,13 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
         if(page < 1){
             page = 1
         }
-   
-        const salas = await salasModel.find({ users: {$elemMatch: { user: user.userName }} }, {name: 1, price: 1, creator: 1})
-        .sort({_id: -1})
+
+        const salas = await balanceUserModel.find({type: 'buy', user: user.userName, salaActive: true}, {salaName: 1, salaId: 1, salaPrice: 1, salaCreator: 1, _id: 0})
+        .sort({date: -1})
         .limit(perPage)
         .skip((perPage * page) - perPage)
-
-        const count = await salasModel.countDocuments({users: {$elemMatch: { user: user.userName }}})
+        
+        const count = await balanceUserModel.countDocuments({type: 'buy', user: user.userName, salaActive: true})
 
         const totalfinal = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
         
@@ -127,7 +130,7 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
         })
     }
     catch(error){
-        res.json({error: error})
+        res.json({error: 'Error Interno'})
     }
 })
 
@@ -141,20 +144,23 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
         
         if(random){
 
-            const randomParent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { space: 'true' }}})
+            const randomParent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { space: true }}})
 
             parentUser = randomParent.users[0].user
             
         }else{ parentUser = req.body.parentUser }   
         
         const user = await userModel.findById(req.userToken, {password: 0})
-        const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1})
+        const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1, creator: 1})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
-        
 
-        if(repitedUser.users.length > 0) {
-            return res.json({error: 'Ya perteneces a esta sala, puedes volver a entrar al completarla'})
+        let countRepeated = 0
+
+        if(repitedUser.users.length > 0){
+            if(repitedUser.users[0].active === true) {
+                return res.json({error: 'Estas activo actualmente en esta sala, puedes volver a entrar al completarla'})
+            }else if(repitedUser.users[0].active === false){ countRepeated = repitedUser.users[0].repeated + 1 }
         }
         
         if(user.wallet < price.price){
@@ -168,7 +174,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
         if(parent.users[0].childsId.childId1 === ''){
             parent.users[0].childsId.childId1 = user.userName
         }else if (parent.users[0].childsId.childId2 === ''){
-            parent.users[0].space = 'false'
+            parent.users[0].space = false
             await parent.save()
             parent.users[0].childsId.childId2 = user.userName
         }else{return res.json({error: 'El usuario padre esta lleno'})}
@@ -177,12 +183,14 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
             $push: {
                 'users': {
                     user: user.userName,
-                    space: 'true',
+                    space: true,
                     parentId: parent.users[0].user,
                     childsId: {
                         childId1: '',
                         childId2: ''
                     },
+                    active: true,
+                    repeated: countRepeated
                 }
             }
         }) 
@@ -197,6 +205,9 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
         const balanceSala = await new balanceUserModel({ 
             user: user.userName,
             salaName: price.name,
+            salaId: salaId,
+            salaCreator: price.creator,
+            salaActive: true,
             accumulated: 0,
             type: 'buy',
             wallet: user.wallet,

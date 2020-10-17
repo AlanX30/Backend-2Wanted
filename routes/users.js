@@ -4,13 +4,13 @@ const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
-const moment = require('moment')
+const nodemailer = require('nodemailer')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_numbers = /^([0-9])*$/
 const reg_whiteSpace = /^$|\s+/
 
-router.post('/api/users/signin', async(req, res, next) => {
+router.post('/api/users/signin', async(req, res) => {
     
     const { email, password } = req.body
 
@@ -192,11 +192,20 @@ router.post('/api/userbalance', verifyToken, async(req, res, next) => {
 
         const { getFechaInicial, getFechaFinal } = req.body
         
-        const perPage = 5
+        const perPage = 10
         let page  = req.body.page || 1
         
         if(page < 1){
             page = 1
+        }
+
+        const getPending = await balanceUserModel.findOne({type: 'withdraw', state: 'pending'})
+        let pending = false
+        let amountPending = 0
+
+        if(getPending){
+            pending = true
+            amountPending = getPending.withdrawAmount
         }
 
         if(getFechaFinal && getFechaInicial){
@@ -214,7 +223,7 @@ router.post('/api/userbalance', verifyToken, async(req, res, next) => {
 
             const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
 
-            res.json({data: fechaBalance, totalPages})
+            res.json({data: fechaBalance, totalPages, pending, amountPending})
 
         }else{
 
@@ -227,10 +236,69 @@ router.post('/api/userbalance', verifyToken, async(req, res, next) => {
 
             const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
 
-            res.json({data: lastestBalance, totalPages})
+            res.json({data: lastestBalance, totalPages, pending, amountPending})
 
         }
 
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/newWithdraw', verifyToken, async(req, res) => {
+
+    try{
+
+        const { amount } = req.body
+    
+        const user = await userModel.findById(req.userToken, {userName: 1, wallet: 1, email: 1})
+        const repited = await balanceUserModel.findOne({user: user.userName, state: 'pending'}, {state: 1})
+
+        if(user.wallet < amount){
+            return res.json({error: 'Dinero insuficiente'})
+        }
+        if(amount < 20000) {
+            return res.json({error: 'Monto minimo de retiro $20.000'})
+        }
+        if(repited){
+            return res.json({error: 'Tiene todavia un retiro pendiente'})
+        }
+    
+        user.wallet = user.wallet - amount
+    
+        const newWithdraw = new balanceUserModel({
+            user: user.userName, type: 'withdraw', withdrawAmount: amount, state: 'pending', wallet: user.wallet
+        })
+    
+        const html = require('../PlantillasMail/mail').withdrawInProcces
+    
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'admin@2wanted.com', 
+                pass: 'A31232723s', 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+    
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: user.email,
+            subject: "Retiro En Proceso",
+            html: html
+        })
+    
+        await newWithdraw.save()
+        await user.save()
+    
+        res.json({msg: 'Tu retiro esta en proceso, recibiras un email de confirmacion al completarse la transaccion, tiempo estimado de 1 a 2 dias'})
+    
     }catch(error){
         res.json({error: 'Error interno'})
     }

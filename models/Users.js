@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
 const { Schema } = mongoose
-const moment = require('moment')
 
 const UserSchema = new Schema({
     userName: {type: String, required: true},
@@ -10,7 +9,7 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     notifications: {type: Number, default: 0},
     wallet: {type: Number, default: 0},
-    date: { type: Date, default: moment().format() },
+    date: { type: Date, default: Date.now},
     dni: {type: String, required: true },
     bank: {
       titular: {type: String},

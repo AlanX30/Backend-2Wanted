@@ -60,7 +60,7 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/notification-payment', async(req, res, next) => {
+router.post('/api/notification-payment', async(req, res) => {
 
   try{
 
