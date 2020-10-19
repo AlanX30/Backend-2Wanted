@@ -13,7 +13,7 @@ socket.socket.io.on('connection', async(data) => {
         data.username = username
 
         const conected = await ConectedModel.findOne({userName: data.username})
-        
+
         if(!conected){
             const new_conected = new ConectedModel({
                 userName: data.username,

@@ -76,7 +76,8 @@ router.post('/api/users/signup', async (req, res) => {
 
         res.json({
             auth: true,
-            token: token
+            token,
+            userName
         })
     }
 })
