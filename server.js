@@ -40,6 +40,7 @@ app.use(express.static(path.join(__dirname + '/public')))
 app.use('/home' ,express.static(path.join(__dirname + '/public')))
 app.use('/sala/:id' ,express.static(path.join(__dirname + '/public')))
 app.use('/profile' ,express.static(path.join(__dirname + '/public')))
+app.use('/balance' ,express.static(path.join(__dirname + '/public')))
 
 /* ------------Listen--------------------------------- */
 
