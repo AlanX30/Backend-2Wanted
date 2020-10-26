@@ -3,7 +3,7 @@ const router = express.Router()
 const salasModel = require('../models/Salas')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
-const verifyToken = require('./verifyToken')
+const verifyToken = require('../Middlewares/verifyToken')
 
 
 router.post('/api/in-sala', verifyToken, async(req, res) => {  
@@ -212,4 +212,4 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     
 })
     
-    module.exports = router 
+module.exports = router 

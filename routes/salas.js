@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const salasModel = require('../models/Salas')
-const verifyToken = require('./verifyToken')
-const positions = require('./positions')
+const verifyToken = require('../Middlewares/verifyToken')
+const positions = require('../Middlewares/positions')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
 

@@ -4,7 +4,7 @@ const router = express.Router()
 const invitationModel = require('../models/Invitations')
 const userModel = require('../models/Users')
 const ConectedModel = require('../models/Conected')
-const verifyToken = require('./verifyToken')
+const verifyToken = require('../Middlewares/verifyToken')
 
 socket.socket.io.on('connection', async(data) => {
 
@@ -77,7 +77,7 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
 
 
     }catch(error){
-        res.json({error: error.name})
+        res.json({error: 'Error Interno'})
     }
 
 })
@@ -108,7 +108,7 @@ router.post('/api/invitations', verifyToken ,async(req, res, next) => {
             totalPages: Math.ceil(count / perPage)
         })
     }catch(error){
-        res.json({error: error})
+        res.json({error: 'Error Interno'})
     }
 })
 
@@ -126,7 +126,7 @@ router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
         res.json({msg: 'leidos reiniciados'})
  
     }catch(error){
-        res.json({error: error})
+        res.json({error: 'Error Interno'})
     }
 })
 

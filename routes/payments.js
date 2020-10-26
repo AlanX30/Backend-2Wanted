@@ -2,7 +2,7 @@ const express = require('express')
 const mercadopago = require('mercadopago')
 const router = express.Router()
 const userModel = require('../models/Users')
-const verifyToken = require('./verifyToken')
+const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
 const axios = require('axios')
 

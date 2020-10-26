@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
-const verifyToken = require('./verifyToken')
+const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
 
