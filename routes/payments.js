@@ -10,7 +10,7 @@ mercadopago.configure({
     access_token: process.env.MERCADOPAGO_ACCESS_TOKEN
 })
 
-router.post('/api/payments', verifyToken , async(req, res, next) => {
+router.post('/api/payments', verifyToken , async(req, res) => {
 
     const user = await userModel.findById(req.userToken, {password: 0})
 
@@ -25,8 +25,6 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
           }
         ],
         payer: {
-          name: "Jesus",
-          surname: "Solano",
           email: user.email,
           identification: {
             type: "DNI",
@@ -53,7 +51,7 @@ router.post('/api/payments', verifyToken , async(req, res, next) => {
         res.json(response.body.init_point)
   
       }).catch(function(error){
-        console.log(error);
+        res.json({error: 'Error en el campo'});
       });
 })
 
