@@ -35,15 +35,15 @@ router.post('/api/payments', verifyToken , async(req, res) => {
           success: "https://2wanted.com/home",
           failure: "https://2wanted.com/home",
           pending: "https://2wanted.com/home"
-      },
-      auto_return: "approved",
-      taxes: [
-        {
-            type: "IVA",
-            value: 0
-        }
-      ]
-    };
+        },
+        auto_return: "approved",
+        taxes: [
+          {
+              type: "IVA",
+              value: 0
+          }
+        ]
+      };
       
       mercadopago.preferences.create(preference)
       .then(function(response){
@@ -95,7 +95,7 @@ router.post('/api/notification-payment', async(req, res) => {
     res.status(200).send(error)
   }
 
-  })
+})
 
 
 /* ------------------------------------------------------------------------------------------------------- */

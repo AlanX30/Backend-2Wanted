@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
 const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
@@ -24,6 +25,14 @@ router.post('/api/users/signin', async(req, res) => {
 
     if (!passwordValidate){
         return res.json({auth: false, error: 'La contraseña es incorrecta'})
+    }
+
+    if(user.isVerified === false){
+        return res.json({
+            auth: false,
+            isVerified: false,
+            email: email
+        })
     }
 
     const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
@@ -65,27 +74,46 @@ router.post('/api/users/signup', async (req, res) => {
     }
     if(repitedDni) {
         return res.json({error: 'Este numero de identificacion se encuentra registrado'})
-    }else {
-        const newUser = new userModel({ userName, email, dni, password, bank })
-        newUser.password = await newUser.encryptPassword( password )
-        await newUser.save()
-
-        const token = jwt.sign({id: newUser._id}, process.env.SECRET_JSONWEBTOKEN, {
-            expiresIn: 60 * 60 * 24
-        })
-
-        res.json({
-            auth: true,
-            token,
-            userName
-        })
     }
+
+    const emailHash = jwt.sign({id: email}, process.env.SECRET_JSONWEBTOKEN, {
+        expiresIn: 60 * 60 * 24
+    });
+
+    const newUser = new userModel({ userName, email, dni, password, bank, emailHash })
+    newUser.password = await newUser.encryptPassword( password )
+    await newUser.save()
+
+    const html = require('../PlantillasMail/mailVerification').mailVerification(emailHash)
+    
+    let transporter = nodemailer.createTransport({
+        host: 'smtp.zoho.com',
+        port: 465,
+        secure: true,
+        auth: {
+            user: 'admin@2wanted.com', 
+            pass: 'A31232723s', 
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    })
+
+    await transporter.sendMail({
+        from: '"2wanted.com" <admin@2wanted.com>',
+        to: newUser.email,
+        subject: "Verificacion de Email",
+        html: html
+    })
+
+    res.json({msg: 'En verificacion de Email'})
+
 })
 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.get('/api/me', verifyToken ,async(req, res, next) => {
+router.get('/api/me', verifyToken ,async(req, res) => {
 
     const user = await userModel.findById(req.userToken, {password: 0})
 
@@ -305,6 +333,73 @@ router.post('/api/newWithdraw', verifyToken, async(req, res) => {
     }
 })
 
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/mailverification', async(req, res) => {
+    try {
+
+        const { emailHash } = req.body
+        
+        const user = await userModel.findOne({emailHash: emailHash}, {userName: 1, emailHash: 1})
+        
+        if(!user){ return res.json({error: 'El usuario ya esta verificado'}) }
+
+        user.isVerified = true
+        user.emailHash = null
+        user.save()
+
+        const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
+            expiresIn: 60 * 60 * 24
+        });
+
+        res.json({
+            auth: true,
+            userName: user.userName,
+            token
+        })
+
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/mailverificationRefresh', async(req, res) => {
+    try {
+
+        const { email } = req.body
+        
+        const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, _id: 0})
+
+        const html = require('../PlantillasMail/mailVerification').mailVerification(user.emailHash)
+    
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'admin@2wanted.com', 
+                pass: 'A31232723s', 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: user.email,
+            subject: "Verificacion de Email",
+            html: html
+        })
+        
+    res.json({msg: 'Email enviado'})
+        
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
 
 
 /* ------------------------------------------------------------------------------------------------------- */

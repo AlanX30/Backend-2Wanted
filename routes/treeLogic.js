@@ -5,6 +5,7 @@ const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
 const verifyToken = require('../Middlewares/verifyToken')
 
+/* ESTA ES LA RUTA MAS LARGA Y COMPLICADA PUESTO QUE MANEJA LA LOGICA DE LA FUNCION PRINCIPAL DE LA APP, EL ARBOL Y LA FACTURACION SEGUN USUARIO */
 
 router.post('/api/in-sala', verifyToken, async(req, res) => {  
 

@@ -9,10 +9,10 @@ const balanceUserModel = require('../models/BalanceUser')
 const reg_whiteSpace = /^$|\s+/
 
 router.post('/api/new/sala', verifyToken ,async(req, res) => {
-    const { users, name, creator } = req.body
-    const price = parseFloat(req.body.price)
-
     try {
+
+        const { users, name, creator } = req.body
+        const price = parseFloat(req.body.price)
 
         const user = await userModel.findById(req.userToken, {password: 0})
         const newSala = await new salasModel({ users, price, name, creator, usersNumber: 1, paidUsers: 0, line123: 1, line4: 0 })
