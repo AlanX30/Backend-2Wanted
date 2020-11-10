@@ -23,8 +23,16 @@ socket.socket.io.on('connection', async(data) => {
         }
     })
 
+    data.on('disconnectClient', async(username) => {
+        if(username){
+            await ConectedModel.findOneAndRemove({userName: username})
+        }
+    })
+
     data.on('disconnect', async() => {
-        await ConectedModel.findOneAndRemove({userName: data.username})
+        if(data.username){
+            await ConectedModel.findOneAndRemove({userName: data.username})
+        }
     })
     
 })

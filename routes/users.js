@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const userModel = require('../models/Users')
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcryptjs')
 const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
@@ -11,40 +10,49 @@ const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_numbers = /^([0-9])*$/
 const reg_whiteSpace = /^$|\s+/
 
+try{
+
+}catch(error){
+    res.json({error: 'Error interno'}
+)}
+
 router.post('/api/users/signin', async(req, res) => {
+
+    try{
+        const { email, password } = req.body
     
-    const { email, password } = req.body
-
-    const user = await userModel.findOne({email: email})
+        const user = await userModel.findOne({email: email})
+        
+        if (!user){
+            return res.json({auth: false, error: 'Email no registrado'})
+        }
     
-    if (!user){
-        return res.json({auth: false, error: 'Email no registrado'})
-    }
-
-    const passwordValidate = await user.matchPassword(password)
-
-    if (!passwordValidate){
-        return res.json({auth: false, error: 'La contraseña es incorrecta'})
-    }
-
-    if(user.isVerified === false){
-        return res.json({
-            auth: false,
-            isVerified: false,
-            email: email
-        })
-    }
-
-    const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
-        expiresIn: 60 * 60 * 24
-    });
-
-    res.status(200).json({
+        const passwordValidate = await user.matchPassword(password)
+    
+        if (!passwordValidate){
+            return res.json({auth: false, error: 'La contraseña es incorrecta'})
+        }
+    
+        if(user.isVerified === false){
+            return res.json({
+                auth: false,
+                isVerified: false,
+                email: email
+            })
+        }
+    
+        const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
+            expiresIn: 60 * 60 * 24
+        });
+    
+        res.status(200).json({
             auth: true,
             userName: user.userName,
             token
         });
-    
+    }catch(error){
+        res.json({error: 'Error interno'}
+    )}
 })
 
 
@@ -53,60 +61,64 @@ router.post('/api/users/signin', async(req, res) => {
 
 router.post('/api/users/signup', async (req, res) => {
 
-    const { userName ,email, dni, password, confirm_password ,bank } = req.body
+    try{
+        const { userName ,email, dni, password, confirm_password ,bank } = req.body
     
-    if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
-        return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres, sin espacios'})
-    }
-    if(!reg_password.test(password)){
-        return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
-    }
-
-    if(confirm_password === undefined || password !== confirm_password){
-        return res.json({error:'Las Contraseñas no Coinciden'})
-    }
-        
-    const repitedEmail = await userModel.findOne({email: email})
-    const repitedDni = await userModel.findOne({dni: dni})
-    
-    if(repitedEmail) {
-        return res.json({error: 'Este email se encuentra registrado'})
-    }
-    if(repitedDni) {
-        return res.json({error: 'Este numero de identificacion se encuentra registrado'})
-    }
-
-    const emailHash = jwt.sign({id: email}, process.env.SECRET_JSONWEBTOKEN, {
-        expiresIn: 60 * 60 * 24
-    });
-
-    const newUser = new userModel({ userName, email, dni, password, bank, emailHash })
-    newUser.password = await newUser.encryptPassword( password )
-    await newUser.save()
-
-    const html = require('../PlantillasMail/mailVerification').mailVerification(emailHash)
-    
-    let transporter = nodemailer.createTransport({
-        host: 'smtp.zoho.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: 'admin@2wanted.com', 
-            pass: 'A31232723s', 
-        },
-        tls: {
-            rejectUnauthorized: false
+        if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
+            return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres, sin espacios'})
         }
-    })
+        if(!reg_password.test(password)){
+            return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+        }
 
-    await transporter.sendMail({
-        from: '"2wanted.com" <admin@2wanted.com>',
-        to: newUser.email,
-        subject: "Verificacion de Email",
-        html: html
-    })
+        if(confirm_password === undefined || password !== confirm_password){
+            return res.json({error:'Las Contraseñas no Coinciden'})
+        }
+            
+        const repitedEmail = await userModel.findOne({email: email})
+        const repitedDni = await userModel.findOne({dni: dni})
+        
+        if(repitedEmail) {
+            return res.json({error: 'Este email se encuentra registrado'})
+        }
+        if(repitedDni) {
+            return res.json({error: 'Este numero de identificacion se encuentra registrado'})
+        }
 
-    res.json({msg: 'En verificacion de Email'})
+        const emailHash = jwt.sign({}, process.env.SECRET_JSONWEBTOKEN, {
+            expiresIn: 60 * 60 * 24
+        });
+        
+        const newUser = new userModel({ userName, email, dni, password, bank, emailHash, forgotHash: emailHash })
+        newUser.password = await newUser.encryptPassword( password )
+        await newUser.save()
+
+        const html = require('../PlantillasMail/mailVerification').mailVerification(emailHash)
+        
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'admin@2wanted.com', 
+                pass: 'A31232723s', 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: newUser.email,
+            subject: "Verificacion de Email",
+            html: html
+        })
+
+        res.json({msg: 'En verificacion de Email'})
+    }catch(error){
+        res.json({error: 'Error interno'}
+    )}
 
 })
 
@@ -115,13 +127,17 @@ router.post('/api/users/signup', async (req, res) => {
 
 router.get('/api/me', verifyToken ,async(req, res) => {
 
-    const user = await userModel.findById(req.userToken, {password: 0})
+    try{
+        const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0})
 
-    if (!user){
-        return res.status(404).json({auth: 'false', error: 'No user found'})
-    }
-
-    res.json(user)
+        if (!user){
+            return res.status(404).json({auth: 'false', error: 'No user found'})
+        }
+    
+        res.json(user)
+    }catch(error){
+        res.json({error: 'Error interno'}
+    )}
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
@@ -401,7 +417,100 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
     }
 })
 
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/changemailverification', async(req, res) => {
+    try{
+        const { newEmail, oldEmail } = req.body
+
+        const user = await userModel.findOne({email: oldEmail}, {email: 1})
+
+        const repitedEmail = await userModel.findOne({email: newEmail}, {email: 1})
+        
+        if(repitedEmail){return res.json({error: 'Este email ya se encuentra registrado'})}
+
+        user.email = newEmail
+
+        await user.save()
+        
+        res.json({msg: 'Email actualizado', email: user.email})
+
+    }catch(errror){
+        res.json({error: 'Error interno'})
+    }
+})
 
 /* ------------------------------------------------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/forgotpassword', async(req, res) => {
+    try{
+       
+        const { email } = req.body
+        
+        const user = await userModel.findOne({email: email}, {email: 1, forgotHash: 1})
+        if(!user){
+            return res.json({error: 'El usuario no existe'})
+        }
+        
+        const html = require('../PlantillasMail/forgotPassword').forgotPassword(user.forgotHash)
+    
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'admin@2wanted.com', 
+                pass: 'A31232723s', 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: user.email,
+            subject: "Verificacion de Email",
+            html: html
+        })
+
+        res.json({msg: 'Email enviado'})
+
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/changeForgotPassword', async(req, res) => {
+    try{
+
+        const { forgotHash, password, confirmPassword } = req.body
+
+        const user = await userModel.findOne({forgotHash: forgotHash}, {password: 1})
+
+        if(!user){return res.json({error: 'Este usuario no existe, o este link esta vencido'})}
+
+        if(!reg_password.test(password)){
+            return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+        }
+
+        if(confirmPassword === undefined || password !== confirmPassword){
+            return res.json({error:'Las Contraseñas no Coinciden'})
+        }
+
+        user.password = await user.encryptPassword( password )
+
+        await user.save()
+
+        res.json({msg: 'Contraseña actualizada correctamente'})
+
+    }catch(error){
+        res.json({error: 'Error interno'})
+    }
+})
 
 module.exports = router

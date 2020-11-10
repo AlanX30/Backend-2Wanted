@@ -6,7 +6,8 @@ const { Schema } = mongoose
 const UserSchema = new Schema({
     userName: {type: String, required: true},
     email: {type: String, required: true},
-    emailHash: {type: String },
+    emailHash: {type: String, unique: true },
+    forgotHash: {type: String, unique: true },
     isVerified: {type: Boolean, default: false },
     password: {type: String, required: true},
     notifications: {type: Number, default: 0},
