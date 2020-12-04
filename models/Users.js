@@ -13,7 +13,6 @@ const UserSchema = new Schema({
     notifications: {type: Number, default: 0},
     wallet: {type: Number, default: 0},
     date: { type: Date, default: Date.now},
-    dni: {type: String, required: true },
     bank: {
       titular: {type: String},
       tipo: {type: String},

@@ -42,7 +42,7 @@ const mailVerification = token => `
                     <img class="logo1" src="https://i.ibb.co/rcGw6hh/logo-1.png" alt="logo-1" border="0">
                     <img class="logo2" src="https://i.ibb.co/6FQ2zHT/2WANTED.png" alt="2WANTED" border="0" />
                 </div>
-                <h1 class="title">Verifica tu email para acceder con el siguiente enlace</h1>
+                <h1 class="title">Verify your email to access with the following link</h1>
                 <a target="_blank" href='${process.env.URL_HOST}/mailverification/${token}'>${process.env.URL_HOST}/mailverification/${token}</a>
 
         </div>

@@ -7,13 +7,12 @@ const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
-const reg_numbers = /^([0-9])*$/
 const reg_whiteSpace = /^$|\s+/
 
 try{
 
 }catch(error){
-    res.json({error: 'Error interno'}
+    res.json({error: 'Internal error'}
 )}
 
 router.post('/api/users/signin', async(req, res) => {
@@ -24,13 +23,13 @@ router.post('/api/users/signin', async(req, res) => {
         const user = await userModel.findOne({email: email})
         
         if (!user){
-            return res.json({auth: false, error: 'Email no registrado'})
+            return res.json({auth: false, error: 'Email not registered'})
         }
     
         const passwordValidate = await user.matchPassword(password)
     
         if (!passwordValidate){
-            return res.json({auth: false, error: 'La contraseña es incorrecta'})
+            return res.json({auth: false, error: 'Password is incorrect'})
         }
     
         if(user.isVerified === false){
@@ -51,7 +50,7 @@ router.post('/api/users/signin', async(req, res) => {
             token
         });
     }catch(error){
-        res.json({error: 'Error interno'}
+        res.json({error: 'Internal error'}
     )}
 })
 
@@ -62,34 +61,30 @@ router.post('/api/users/signin', async(req, res) => {
 router.post('/api/users/signup', async (req, res) => {
 
     try{
-        const { userName ,email, dni, password, confirm_password ,bank } = req.body
+        const { userName ,email, password, confirm_password ,bank } = req.body
     
         if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
-            return res.json({error: 'El Usuario Debe tener 4 a 16 Caracteres, sin espacios'})
+            return res.json({error: 'The User must have 4 to 16 Characters, without spaces'})
         }
         if(!reg_password.test(password)){
-            return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+            return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
         }
 
         if(confirm_password === undefined || password !== confirm_password){
-            return res.json({error:'Las Contraseñas no Coinciden'})
+            return res.json({error:'Passwords do not match'})
         }
             
         const repitedEmail = await userModel.findOne({email: email})
-        const repitedDni = await userModel.findOne({dni: dni})
         
         if(repitedEmail) {
-            return res.json({error: 'Este email se encuentra registrado'})
-        }
-        if(repitedDni) {
-            return res.json({error: 'Este numero de identificacion se encuentra registrado'})
+            return res.json({error: 'This email is registered'})
         }
 
         const emailHash = jwt.sign({}, process.env.SECRET_JSONWEBTOKEN, {
             expiresIn: 60 * 60 * 24
         });
         
-        const newUser = new userModel({ userName, email, dni, password, bank, emailHash, forgotHash: emailHash })
+        const newUser = new userModel({ userName, email, password, bank, emailHash, forgotHash: emailHash })
         newUser.password = await newUser.encryptPassword( password )
         await newUser.save()
 
@@ -115,9 +110,9 @@ router.post('/api/users/signup', async (req, res) => {
             html: html
         })
 
-        res.json({msg: 'En verificacion de Email'})
+        res.json({msg: 'verifying email'})
     }catch(error){
-        res.json({error: 'Error interno'}
+        res.json({error: 'Internal error'}
     )}
 
 })
@@ -136,7 +131,7 @@ router.get('/api/me', verifyToken ,async(req, res) => {
     
         res.json(user)
     }catch(error){
-        res.json({error: 'Error interno'}
+        res.json({error: 'Internal error'}
     )}
 })
 
@@ -155,18 +150,18 @@ router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
             const passwordValidate = await user.matchPassword(password)
 
             if (!passwordValidate){
-                return res.json({error: 'La contraseña es incorrecta'})
+                return res.json({error: 'Password is incorrect'})
             }
 
             if(!reg_password.test(newPassword)){
-                return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+                return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
             }
 
             user.password = await user.encryptPassword( newPassword )
             
             await user.save()
 
-            return res.json({msg: 'Contraseña actualizada correctamente'})
+            return res.json({msg: 'Password updated successfully'})
         }
         
         if(email){
@@ -175,63 +170,18 @@ router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
             if(email === user.email){
                 user.email = newEmail
                 await user.save()
-                return res.json({msg: 'Email actualizado correctamente'})
-            }else{ res.json({error: 'Email actual no coincide'}) }
+                return res.json({msg: 'Email successfully updated'})
+            }else{ res.json({error: 'Current email does not match'}) }
 
-        }else{res.json({error: 'Error interno'})}   
+        }else{res.json({error: 'Internal error'})}   
 
-    }catch(error){res.json({error: 'Error interno'})}
+    }catch(error){res.json({error: 'Internal error'})}
 
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/edit/bankAccount', verifyToken , async(req, res, next) => {
-    try{
-
-        const { titular, tipo, dni, banco, numeroCuenta, tipoCuenta } = req.body
-
-        if(!reg_numbers.test(dni)) {
-            res.json({error: 'Numero de identificacion solo debe contener numeros'})
-        }
-
-        if(!reg_numbers.test(numeroCuenta)) {
-            res.json({error: 'El numero de cuenta solo debe contener numeros'})
-        }
-
-        await userModel.findByIdAndUpdate(req.userToken, { bank: {
-            titular, tipo, dni, banco, numeroCuenta, tipoCuenta
-        }})
-
-        res.json({msg: 'Cuenta agregada correctamente'})
-
-    }catch(error){
-        res.json({error: 'Error interno'})
-    }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.post('/remove/bankAccount', verifyToken , async(req, res, next) => {
-    try{
-        const user = await userModel.findById(req.userToken, {bank: 1})
-        
-        user.bank = {
-            titular: ''
-        }
-
-        await user.save()
-
-        res.json({msg: 'Cuenta eliminada Correctamente'})
-
-    }catch(error){
-        res.json({error: 'Error interno'})
-    }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.post('/api/userbalance', verifyToken, async(req, res, next) => {
+router.post('/api/userbalance', verifyToken, async(req, res) => {
     
     try{
 
@@ -286,7 +236,7 @@ router.post('/api/userbalance', verifyToken, async(req, res, next) => {
         }
 
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -302,13 +252,13 @@ router.post('/api/newWithdraw', verifyToken, async(req, res) => {
         const repited = await balanceUserModel.findOne({user: user.userName, state: 'pending'}, {state: 1})
 
         if(user.wallet < amount){
-            return res.json({error: 'Dinero insuficiente'})
+            return res.json({error: 'Insufficient money'})
         }
         if(amount < 20000) {
-            return res.json({error: 'Monto minimo de retiro $20.000'})
+            return res.json({error: 'Minimum withdrawal amount $ 20,000'})
         }
         if(repited){
-            return res.json({error: 'Tiene todavia un retiro pendiente'})
+            return res.json({error: 'You still have a pending withdrawal'})
         }
     
         user.wallet = user.wallet - amount
@@ -335,14 +285,14 @@ router.post('/api/newWithdraw', verifyToken, async(req, res) => {
         await transporter.sendMail({
             from: '"2wanted.com" <admin@2wanted.com>',
             to: user.email,
-            subject: "Retiro En Proceso",
+            subject: "Withdrawal In Process",
             html: html
         })
     
         await newWithdraw.save()
         await user.save()
     
-        res.json({msg: 'Tu retiro esta en proceso, recibiras un email de confirmacion al completarse la transaccion, tiempo estimado de 1 a 2 dias'})
+        res.json({msg: 'ok'})
     
     }catch(error){
         res.json({error: 'Error interno'})
@@ -358,7 +308,7 @@ router.post('/api/mailverification', async(req, res) => {
         
         const user = await userModel.findOne({emailHash: emailHash}, {userName: 1, emailHash: 1})
         
-        if(!user){ return res.json({error: 'El usuario ya esta verificado'}) }
+        if(!user){ return res.json({error: 'User is already verified'}) }
 
         user.isVerified = true
         user.emailHash = null
@@ -375,7 +325,7 @@ router.post('/api/mailverification', async(req, res) => {
         })
 
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -406,14 +356,14 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
         await transporter.sendMail({
             from: '"2wanted.com" <admin@2wanted.com>',
             to: user.email,
-            subject: "Verificacion de Email",
+            subject: "Email verification",
             html: html
         })
         
-    res.json({msg: 'Email enviado'})
+    res.json({msg: 'E-mail sent'})
         
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -427,16 +377,16 @@ router.post('/api/changemailverification', async(req, res) => {
 
         const repitedEmail = await userModel.findOne({email: newEmail}, {email: 1})
         
-        if(repitedEmail){return res.json({error: 'Este email ya se encuentra registrado'})}
+        if(repitedEmail){return res.json({error: 'This email is already registered'})}
 
         user.email = newEmail
 
         await user.save()
         
-        res.json({msg: 'Email actualizado', email: user.email})
+        res.json({msg: 'Email updated', email: user.email})
 
     }catch(errror){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Insternal error'})
     }
 })
 
@@ -451,7 +401,7 @@ router.post('/api/forgotpassword', async(req, res) => {
         
         const user = await userModel.findOne({email: email}, {email: 1, forgotHash: 1})
         if(!user){
-            return res.json({error: 'El usuario no existe'})
+            return res.json({error: 'Username does not exist'})
         }
         
         const html = require('../PlantillasMail/forgotPassword').forgotPassword(user.forgotHash)
@@ -476,10 +426,10 @@ router.post('/api/forgotpassword', async(req, res) => {
             html: html
         })
 
-        res.json({msg: 'Email enviado'})
+        res.json({msg: 'Email sent'})
 
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -492,24 +442,24 @@ router.post('/api/changeForgotPassword', async(req, res) => {
 
         const user = await userModel.findOne({forgotHash: forgotHash}, {password: 1})
 
-        if(!user){return res.json({error: 'Este usuario no existe, o este link esta vencido'})}
+        if(!user){return res.json({error: 'This user does not exist, or this link is expired'})}
 
         if(!reg_password.test(password)){
-            return res.json({error: 'La contraseña Debe contener mayuscula, minuscula y numero, minimo 8 caracteres'})
+            return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
         }
 
         if(confirmPassword === undefined || password !== confirmPassword){
-            return res.json({error:'Las Contraseñas no Coinciden'})
+            return res.json({error:'Passwords do not match'})
         }
 
         user.password = await user.encryptPassword( password )
 
         await user.save()
 
-        res.json({msg: 'Contraseña actualizada correctamente'})
+        res.json({msg: 'Password updated successfully'})
 
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 

@@ -19,15 +19,15 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
  
         if(user.wallet < price){
-            return res.json({error: 'No hay dinero suficiente'})
+            return res.json({error: 'Insufficient money in wallet'})
         }
         
         if(repitedName) {
-            return res.json({error: 'Ya hay una sala con este nombre'})
+            return res.json({error: 'A room with this name already exists'})
         }
 
         if(reg_whiteSpace.test(name) || name.length < 4 || name.length > 15){
-            return  res.json({error: 'El nomnbre debe tener mas de 3 caracteres, maximo 15, no debe tener espacios'})
+            return  res.json({error: 'The name must have more than 3 characters, maximum 15, must not have spaces'})
         }
         if(price < 5000 || req.body.price === '' || req.body.price === undefined ){
             return  res.json({error: 'Precio minimo de salas 5.000 COP'})
@@ -53,10 +53,10 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
     
         await balanceSala.save()
 
-        res.json({msg: 'Sala creada correctamente', id: newSala._id})
+        res.json({msg: 'Correctly created room', id: newSala._id})
 
     }catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -68,7 +68,7 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
 
         if(name) {
             if( reg_whiteSpace.test(name) ){
-                return res.json({error: 'No debe contener espacios'})
+                return res.json({error: 'Must not contain spaces'})
             }
         }
 
@@ -93,11 +93,11 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
             return res.json({data: salaById, parentId: parentUser, inBalance: balanceUser.accumulated})
         }
             
-        res.json({error: 'No existe esta sala'})
+        res.json({error: 'This room does not exist'})
         
     }
     catch(error){
-        res.status(500).json({error: 'Error Interno'})
+        res.status(500).json({error: 'Internal error'})
     }
     
 })
@@ -130,7 +130,7 @@ router.post('/api/search/listSalas', verifyToken, async(req, res) => {
         })
     }
     catch(error){
-        res.json({error: 'Error Interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
@@ -159,15 +159,15 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
 
         if(repitedUser.users.length > 0){
             if(repitedUser.users[0].active === true) {
-                return res.json({error: 'Estas activo actualmente en esta sala, puedes volver a entrar al completarla'})
+                return res.json({error: 'You are currently active in this room, you can re-enter when completing it'})
             }else if(repitedUser.users[0].active === false){ countRepeated = repitedUser.users[0].repeated + 1 }
         }
         
         if(user.wallet < price.price){
-            return res.json({error: 'No hay dinero suficiente'})
+            return res.json({error: 'Not enough money'})
         }
         if(parent.users.length === 0){
-            return res.json({error: 'No existe el padre usuario en esta sala'})
+            return res.json({error: 'There is no parent user in this room'})
         }
         user.wallet = user.wallet - price.price
 
@@ -177,7 +177,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
             parent.users[0].space = false
             await parent.save()
             parent.users[0].childsId.childId2 = user.userName
-        }else{return res.json({error: 'El usuario padre esta lleno'})}
+        }else{return res.json({error: 'The parent user is full'})}
     
         await salasModel.updateOne({_id: salaId}, {
             $push: {
@@ -219,10 +219,10 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
         await balanceSala.save()
         await price.save()
     
-        res.json({msg: 'Usuario agregado correctamente', id: salaId})
+        res.json({msg: 'User added successfully', id: salaId})
         
     }catch(error){
-        res.json({error: 'Error Interno'})
+        res.json({error: 'Internal error'})
     }
 })
 
