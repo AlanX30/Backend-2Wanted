@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const userModel = require('../models/Users')
+const request = require('request');
 const jwt = require('jsonwebtoken')
 const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
@@ -8,6 +9,10 @@ const nodemailer = require('nodemailer')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_whiteSpace = /^$|\s+/
+
+const apiKey = process.env.BTCAPIKEY
+const xpub = process.env.XPUB
+const mnemonic = process.env.MNEMONIC
 
 try{
 
@@ -80,16 +85,16 @@ router.post('/api/users/signup', async (req, res) => {
             return res.json({error: 'This email is registered'})
         }
 
-        const emailHash = jwt.sign({}, process.env.SECRET_JSONWEBTOKEN, {
+        const emailHash = jwt.sign({}, process.env.EMAILHASH, {
             expiresIn: 60 * 60 * 24
         });
-        
+
         const newUser = new userModel({ userName, email, password, bank, emailHash, forgotHash: emailHash })
-        newUser.password = await newUser.encryptPassword( password )
+        newUser.password = await newUser.encryptPassword(password)
         await newUser.save()
 
         const html = require('../PlantillasMail/mailVerification').mailVerification(emailHash)
-        
+            
         let transporter = nodemailer.createTransport({
             host: 'smtp.zoho.com',
             port: 465,
@@ -111,7 +116,9 @@ router.post('/api/users/signup', async (req, res) => {
         })
 
         res.json({msg: 'verifying email'})
+        
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'}
     )}
 
@@ -130,6 +137,7 @@ router.get('/api/me', verifyToken ,async(req, res) => {
         }
     
         res.json(user)
+        
     }catch(error){
         res.json({error: 'Internal error'}
     )}
@@ -264,7 +272,7 @@ router.post('/api/newWithdraw', verifyToken, async(req, res) => {
         user.wallet = user.wallet - amount
     
         const newWithdraw = new balanceUserModel({
-            user: user.userName, type: 'withdraw', withdrawAmount: amount, state: 'pending', wallet: user.wallet
+            user: user.userName, type: 'withdraw', withdrawAmount: amount, state: 'complete', wallet: user.wallet
         })
     
         const html = require('../PlantillasMail/mail').withdrawInProcces
@@ -306,13 +314,64 @@ router.post('/api/mailverification', async(req, res) => {
 
         const { emailHash } = req.body
         
-        const user = await userModel.findOne({emailHash: emailHash}, {userName: 1, emailHash: 1})
-        
+        const user = await userModel.findOne({emailHash: emailHash}, {userName: 1, emailHash: 1, isVerified: 1, idWallet: 1})
         if(!user){ return res.json({error: 'User is already verified'}) }
 
         user.isVerified = true
         user.emailHash = null
-        user.save()
+
+        const options1 = {
+            url: 'https://api-eu1.tatum.io/v3/ledger/account',
+            method: 'POST',
+            body: JSON.stringify({
+              currency: 'BTC',
+              xpub: xpub,
+              accountingCurrency: 'USD'
+            }),
+            headers: {
+                'x-api-key': apiKey,
+                'Content-Type': 'application/json'
+            }
+        }
+
+        request(options1, async function(err, response){
+
+            if (err) { return res.json({error: 'Internal error'}) }
+
+            const data = JSON.parse(response.body)
+
+            user.idWallet = data.id
+
+            const options2 = {
+                url: 'https://api-eu1.tatum.io/v3/subscription',
+                method: 'POST',
+                body: JSON.stringify({
+                  type: "ACCOUNT_INCOMING_BLOCKCHAIN_TRANSACTION",
+                  attr: {
+                    id: data.id,
+                    url: "https://cc89db3105ecebcd5094cc6de8ca059f.m.pipedream.net"
+                  }
+                }),
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
+                }
+            }
+
+            request(options2, async function(err, response2){
+
+                if (err) { return res.json({error: 'Internal error'}) }
+    
+                const data = JSON.parse(response2.body)
+
+                user.idNotifications = data.id
+
+                await user.save()
+    
+            })
+
+        })
+
 
         const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
             expiresIn: 60 * 60 * 24
@@ -335,9 +394,9 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
     try {
 
         const { email } = req.body
-        
         const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, _id: 0})
-
+        console.log(email, user)
+        
         const html = require('../PlantillasMail/mailVerification').mailVerification(user.emailHash)
     
         let transporter = nodemailer.createTransport({
@@ -363,6 +422,7 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
     res.json({msg: 'E-mail sent'})
         
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })

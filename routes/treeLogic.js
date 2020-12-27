@@ -9,8 +9,10 @@ const verifyToken = require('../Middlewares/verifyToken')
 
 router.post('/api/in-sala', verifyToken, async(req, res) => {  
 
+    const userToken = await userModel.findById(req.userToken, {userName: 1})
+
     const salaId = req.query.id 
-    const userRoot = req.body.user
+    const userRoot = userToken.userName
     const toBalance = req.body.toBalance
 
     /* ------------------------Nivel 1------------------------------------------------------------------------------- */

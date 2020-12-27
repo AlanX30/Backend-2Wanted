@@ -5,6 +5,7 @@ const { Schema } = mongoose
 const BalanceUserSchema = new Schema({
     user: {type: String},
     salaName: {type: String},
+    txId: {type: String},
     salaId: {type: Schema.Types.ObjectId, ref: 'Salas' },
     salaActive: {type: Boolean},
     salaCreator: {type: String},

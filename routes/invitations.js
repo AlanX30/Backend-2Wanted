@@ -6,32 +6,40 @@ const userModel = require('../models/Users')
 const ConectedModel = require('../models/Conected')
 const verifyToken = require('../Middlewares/verifyToken')
 
-socket.socket.io.on('connection', async(data) => {
+const userConecteds = []
+const userSocket = []
 
+socket.socket.io.on('connection', async(data) => {
+    
     data.on('user_online', async(username) => {
 
         data.username = username
-
-        const conected = await ConectedModel.findOne({userName: data.username})
-
-        if(!conected){
-            const new_conected = new ConectedModel({
-                userName: data.username,
-                socket: data.id
-            })
-            await new_conected.save() 
+        
+        if(userConecteds.indexOf(data.username) === -1) {
+            userConecteds.push(data.username)
+            userSocket.push(data.id)
         }
+        
+     /*    console.log(userConecteds)
+        console.log(userSocket)
+      */
     })
 
     data.on('disconnectClient', async(username) => {
         if(username){
-            await ConectedModel.findOneAndRemove({userName: username})
+        /*     console.log(userSocket[userConecteds.indexOf( username )])
+            userSocket.splice(userConecteds.indexOf( username ), 1)
+            userConecteds.splice(userConecteds.indexOf( username ), 1)
+            console.log(userConecteds) */
         }
     })
 
     data.on('disconnect', async() => {
         if(data.username){
-            await ConectedModel.findOneAndRemove({userName: data.username})
+            /* console.log(userSocket[userConecteds.indexOf( data.username )])
+            userSocket.splice(userConecteds.indexOf( data.username ), 1)
+            userConecteds.splice(userConecteds.indexOf( data.username ), 1)
+            console.log(userConecteds) */
         }
     })
     
@@ -72,12 +80,12 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
     
         await invitation.save()
         await user.save()
-
-        const user_conected = await ConectedModel.findOne({userName: newUser})
         
-        if(user_conected){
-            if(socket.socket.io.sockets.connected[user_conected.socket]){
-                socket.socket.io.sockets.connected[user_conected.socket].emit('new_message', 1)
+        let indexUser = userConecteds.indexOf(newUser)
+
+        if(indexUser > -1){
+            if(socket.socket.io.sockets.connected[userSocket[indexUser]]){
+                socket.socket.io.sockets.connected[userSocket[indexUser]].emit('new_message', 1)
             }
         }
 

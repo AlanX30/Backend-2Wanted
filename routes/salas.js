@@ -11,10 +11,21 @@ const reg_whiteSpace = /^$|\s+/
 router.post('/api/new/sala', verifyToken ,async(req, res) => {
     try {
 
-        const { users, name, creator } = req.body
+        const name = req.body.name
         const price = parseFloat(req.body.price)
-
         const user = await userModel.findById(req.userToken, {password: 0})
+        const creator = user.userName
+        const users = [
+            {
+                user: user.userName,
+                parentId: undefined,
+                childsId: {
+                    childId1: '',
+                    childId2: '',
+                }
+            }
+        ]
+
         const newSala = await new salasModel({ users, price, name, creator, usersNumber: 1, paidUsers: 0, line123: 1, line4: 0 })
         const repitedName = await salasModel.findOne({name: name}, {name: 1})
  
@@ -64,7 +75,7 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
     
     try{
 
-        const { name, salaId, username } = req.body
+        const { name, salaId } = req.body
 
         if(name) {
             if( reg_whiteSpace.test(name) ){
@@ -83,11 +94,13 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
    
         if(salaById){
 
-            const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: username }}})
+            const userToken = await userModel.findById(req.userToken, {userName: 1})
+
+            const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: userToken.userName }}})
             
             const parentUser = parent.users[0].parentId ? parent.users[0].parentId : 'Ninguno'
 
-            const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: username})
+            const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: userToken.userName})
             .sort({_id: -1})
 
             return res.json({data: salaById, parentId: parentUser, inBalance: balanceUser.accumulated})

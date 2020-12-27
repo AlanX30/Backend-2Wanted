@@ -6,21 +6,15 @@ const { Schema } = mongoose
 const UserSchema = new Schema({
     userName: {type: String, required: true},
     email: {type: String, required: true},
-    emailHash: {type: String, unique: true },
-    forgotHash: {type: String, unique: true },
+    emailHash: {type: String },
+    forgotHash: {type: String },
     isVerified: {type: Boolean, default: false },
     password: {type: String, required: true},
     notifications: {type: Number, default: 0},
+    idWallet: {type: String},
+    idNotifications: {type: String},
     wallet: {type: Number, default: 0},
     date: { type: Date, default: Date.now},
-    bank: {
-      titular: {type: String},
-      tipo: {type: String},
-      dni: {type: String},
-      banco: {type: String},
-      numeroCuenta: {type: String},
-      tipoCuenta: {type: String}
-    }
 })
 
   UserSchema.methods.encryptPassword = async password => {
