@@ -358,6 +358,15 @@ router.post('/api/mailverification', async(req, res) => {
                 }
             }
 
+            const options3 = {
+                url: `https://api-eu1.tatum.io/v3/offchain/account/${data.id}/address`,
+                method: 'POST',
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
+                }
+            } 
+
             request(options2, async function(err, response2){
 
                 if (err) { return res.json({error: 'Internal error'}) }
@@ -365,9 +374,17 @@ router.post('/api/mailverification', async(req, res) => {
                 const data = JSON.parse(response2.body)
 
                 user.idNotifications = data.id
-
-                await user.save()
     
+            })
+
+            request(options3, async function(err, response){
+                
+                if (err) { return res.json({error: 'Internal error'}) }
+          
+                user.addressWallet = JSON.parse(response.body).address
+          
+                await user.save()
+                  
             })
 
         })
