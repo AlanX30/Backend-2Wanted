@@ -4,9 +4,15 @@ const socket = require('./socket')
 const app = express()
 const bodyParser = require('body-parser')
 const path = require('path')
+const rateLimit = require("express-rate-limit")
 const cors = require('cors')
 require('dotenv').config()
 require('./database')
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
 
 ///* ------------Socket init--------------------------------- */
 
@@ -16,6 +22,7 @@ socket.connect(server)
 ///* ------------Middlewares--------------------------------- */
 
 app.use(cors())
+app.use(limiter)
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())

@@ -10,6 +10,7 @@ const InvitationsSchema = new Schema({
     price: {type: Number },
     salaId: {type: Schema.Types.ObjectId, ref: 'Salas' },
     salaName: {type: String },
+    date: { type: Date, default: Date.now}
 })
 
 module.exports = mongoose.model('Invitations', InvitationsSchema)

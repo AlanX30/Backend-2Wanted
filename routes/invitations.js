@@ -49,9 +49,12 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
     
     try {
 
-        const { host, newUser, parentUsername, message, salaId, salaName } = req.body
+        const userHost = await userModel.findById(req.userToken, {userName: 1})
+        const { newUser, parentUsername, message, salaId, salaName } = req.body
         const price = parseFloat(req.body.price)
         
+        const host = userHost.userName
+
         if(host === newUser){
             return res.json({error: `Can't send yourself an invitation`})
         }
@@ -101,7 +104,7 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/invitations', verifyToken ,async(req, res, next) => {
+router.post('/api/invitations', verifyToken, async(req, res, next) => {
 
     try {
 
@@ -112,7 +115,7 @@ router.post('/api/invitations', verifyToken ,async(req, res, next) => {
         let page  = req.body.page || 1
     
         const invitations = await invitationModel.find({user: user})
-        .sort({_id: -1})
+        .sort({date: -1})
         .limit(perPage)
         .skip((perPage * page) - perPage)
     

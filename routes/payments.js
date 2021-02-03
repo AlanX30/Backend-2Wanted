@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const request = require('request');
+const request = require('request')
 const userModel = require('../models/Users')
 const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
@@ -37,9 +37,15 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
   
     request(options, function(err, response){
 
-        if (err) console.log(err)
+        if(err){return res.json({error: 'Error interno'})} 
 
-        const signatureId = JSON.parse(response.body).signatureId
+        const data = JSON.parse(response.body)
+
+        if(data.statusCode && data.statusCode >= 400){ 
+          return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+        }
+
+        const signatureId = data.signatureId
 
         const options2 = {
           url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
@@ -49,18 +55,24 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
           }
         }
       
-        request(options2, async function(err, response2){
+        request(options2, async function(err2, response2){
 
-            if (err) console.log(err)
+            if(err2){return res.json({error: 'Error interno'})} 
+
+            const data2 = JSON.parse(response2.body)
+    
+            if(data2.statusCode && data2.statusCode >= 400){ 
+              return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
+            }
             
-            const txId = JSON.parse(response2.body).txId
+            const txId = data2.txId
             const amountNumber = parseFloat(amount)
 
-            /* user.wallet = user.wallet - amountNumber */
+            user.wallet = user.wallet - amountNumber
 
             const newWithdraw = new balanceUserModel({ 
               user: user.userName, 
-              type: 'withdraw', 
+              type: 'withdrawBtc', 
               txId: txId,
               toAddress: address,
               withdrawAmount: amountNumber,  
@@ -75,8 +87,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
     })
 
   }catch(error){
-    console.log(error)
-    res.json({error: 'error'})
+    res.json({error: 'Internal error'})
   }
 })
 
@@ -93,7 +104,7 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
 
     if(!userRecipient){ return res.json({error: 'The username does not exist'}) }
 
-    /* if(user.wallet < amountNumber){ return res.json({error: 'Insufficient balance'}) } */
+    if(user.wallet < amountNumber){ return res.json({error: 'Insufficient balance'}) }
 
     const options = {
       url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
@@ -113,19 +124,23 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
   
     request(options, async function(err, response){
 
-      if (err) console.log(err)
-      
+      if(err){return res.json({error: 'Error interno'})} 
+
       const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
 
       if(data.reference){
 
-        /* user.wallet = user.wallet - amountNumber
+        user.wallet = user.wallet - amountNumber
 
-        userRecipient.wallet = userRecipient.wallet + amountNumber */
+        userRecipient.wallet = userRecipient.wallet + amountNumber
 
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
-          type: 'withdraw', 
+          type: 'withdrawToUser', 
           reference: data.reference,
           toUser: userRecipient.userName,
           withdrawAmount: amountNumber,  
@@ -155,7 +170,6 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
-
 
 router.post('/api/notificationbtc', async(req, res) => {
   try{
@@ -209,9 +223,16 @@ router.post('/api/transactiondetail', async(req, res) => {
   }
 
   request(options,function(err, response){
-      if (err) console.log(err)
+
+      if(err){return res.json({error: 'Error interno'})} 
+
+      const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
       
-      res.json(JSON.parse(response.body))
+      res.json(data)
   })
 
 })
@@ -230,15 +251,22 @@ router.post('/api/tatumaccount', async(req, res) => {
       }
     }
   
-    request(options,function(err, response){
-        if (err) console.log(err)
-        console.log(JSON.parse(response.body))
-        res.json(JSON.parse(response.body))
+    request(options, function(err, response){
+        if(err){return res.json({error: 'Error interno'})} 
+
+        const data = JSON.parse(response.body)
+
+        if(data.statusCode && data.statusCode >= 400){ 
+          return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+        }
+
+        res.json(data)
     })
 
   }catch(error){
-    console.log(error.data)
-    res.json({error: 'error'})
+
+    res.json({error: 'Internal error'})
+
   }
 })
 
@@ -259,16 +287,18 @@ router.post('/api/DELETECC', async(req, res) => {
     }
 
     request(options,function(err, response){
-        if (err) console.log(err)
-        console.log(response)
+
+        if (err) res.json(err)
+
         res.json(response)
     })
 
     
 
   }catch(error){
-    console.log(error.data)
-    res.json({error: 'error'})
+
+    res.json({error: 'Internal Error'})
+
   }
 })
 

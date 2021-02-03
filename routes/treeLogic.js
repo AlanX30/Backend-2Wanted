@@ -147,7 +147,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     if(toBalance === 'true'){
         const salaPrice = await salasModel.findById(salaId, {paidUsers: 1, salaPrice: 1, price: 1, name: 1 })
         const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot}, {accumulated: 1})
-        .sort({_id: -1})
+        .sort({date: -1})
         const user = await userModel.findOne({userName: userRoot}, { wallet: 1 })
         
         let acum3 = 0

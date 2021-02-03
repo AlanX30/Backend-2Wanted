@@ -4,33 +4,41 @@ const userModel = require('../models/Users')
 const request = require('request');
 const jwt = require('jsonwebtoken')
 const verifyToken = require('../Middlewares/verifyToken')
+const rateLimit = require("express-rate-limit")
 const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_whiteSpace = /^$|\s+/
+const reg_email = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
 
 const apiKey = process.env.BTCAPIKEY
 const xpub = process.env.XPUB
-const mnemonic = process.env.MNEMONIC
 
-try{
+const limiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 10, // start blocking after 10 requests
+    message:
+      "Too many accounts created from this IP, please try again after an hour",
+    handler: (res) => { res.json({error: 'Limite de llamadas'}) }
+})
 
-}catch(error){
-    res.json({error: 'Internal error'}
-)}
+
 
 router.post('/api/users/signin', async(req, res) => {
 
     try{
+
         const { email, password } = req.body
+
+        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
     
         const user = await userModel.findOne({email: email})
         
         if (!user){
             return res.json({auth: false, error: 'Email not registered'})
         }
-    
+        
         const passwordValidate = await user.matchPassword(password)
     
         if (!passwordValidate){
@@ -55,7 +63,9 @@ router.post('/api/users/signin', async(req, res) => {
             token
         });
     }catch(error){
+
         res.json({error: 'Internal error'}
+
     )}
 })
 
@@ -63,11 +73,14 @@ router.post('/api/users/signin', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', async (req, res) => {
-
-    try{
-        const { userName ,email, password, confirm_password ,bank } = req.body
+router.post('/api/users/signup', limiter, async (req, res) => {
     
+    try{
+
+        const { userName ,email, password, confirm_password } = req.body
+    
+        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
+
         if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
             return res.json({error: 'The User must have 4 to 16 Characters, without spaces'})
         }
@@ -89,7 +102,7 @@ router.post('/api/users/signup', async (req, res) => {
             expiresIn: 60 * 60 * 24
         });
 
-        const newUser = new userModel({ userName, email, password, bank, emailHash, forgotHash: emailHash })
+        const newUser = new userModel({ userName, email, password, emailHash, forgotHash: emailHash })
         newUser.password = await newUser.encryptPassword(password)
         await newUser.save()
 
@@ -118,18 +131,17 @@ router.post('/api/users/signup', async (req, res) => {
         res.json({msg: 'verifying email'})
         
     }catch(error){
-        console.log(error)
         res.json({error: 'Internal error'}
     )}
 
 })
 
-
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.get('/api/me', verifyToken ,async(req, res) => {
+router.get('/api/me', verifyToken, async(req, res) => {
 
     try{
+
         const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0})
 
         if (!user){
@@ -145,7 +157,7 @@ router.get('/api/me', verifyToken ,async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
+router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
 
     try{
 
@@ -173,6 +185,9 @@ router.post('/edit/passwordemail', verifyToken , async(req, res, next) => {
         }
         
         if(email){
+
+            if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
+
             const user = await userModel.findById(req.userToken, {email: 1})
 
             if(email === user.email){
@@ -202,15 +217,6 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
             page = 1
         }
 
-        const getPending = await balanceUserModel.findOne({type: 'withdraw', state: 'pending'})
-        let pending = false
-        let amountPending = 0
-
-        if(getPending){
-            pending = true
-            amountPending = getPending.withdrawAmount
-        }
-
         if(getFechaFinal && getFechaInicial){
 
             const user = await userModel.findById(req.userToken, {userName: 1, _id: 0})
@@ -226,7 +232,7 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
 
             const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
 
-            res.json({data: fechaBalance, totalPages, pending, amountPending})
+            res.json({data: fechaBalance, totalPages})
 
         }else{
 
@@ -235,11 +241,11 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
             const count = await balanceUserModel.countDocuments({user: user.userName})
 
             const lastestBalance = await balanceUserModel.find({user: user.userName})
-            .sort({_id: -1}).limit(perPage).skip((perPage * page) - perPage)
+            .sort({date: -1}).limit(perPage).skip((perPage * page) - perPage)
 
             const totalPages = Math.ceil(count / perPage) > 0 ? Math.ceil(count / perPage) : 1
 
-            res.json({data: lastestBalance, totalPages, pending, amountPending})
+            res.json({data: lastestBalance, totalPages})
 
         }
 
@@ -336,9 +342,13 @@ router.post('/api/mailverification', async(req, res) => {
 
         request(options1, async function(err, response){
 
-            if (err) { return res.json({error: 'Internal error'}) }
+            if(err){return res.json({error: 'Error interno'})} 
 
             const data = JSON.parse(response.body)
+
+            if(data.statusCode && data.statusCode >= 400){ 
+                return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+            }
 
             user.idWallet = data.id
 
@@ -349,7 +359,7 @@ router.post('/api/mailverification', async(req, res) => {
                   type: "ACCOUNT_INCOMING_BLOCKCHAIN_TRANSACTION",
                   attr: {
                     id: data.id,
-                    url: "https://cc89db3105ecebcd5094cc6de8ca059f.m.pipedream.net"
+                    url: "https://2wanted.io/api/notificationbtc"
                   }
                 }),
                 headers: {
@@ -367,24 +377,34 @@ router.post('/api/mailverification', async(req, res) => {
                 }
             } 
 
-            request(options2, async function(err, response2){
+            request(options2, async function(err2, response2){
 
-                if (err) { return res.json({error: 'Internal error'}) }
-    
-                const data = JSON.parse(response2.body)
+                if(err2){return res.json({error: 'Error interno'})} 
 
-                user.idNotifications = data.id
-    
-            })
+                const data2 = JSON.parse(response2.body)
 
-            request(options3, async function(err, response){
+                if(data2.statusCode && data2.statusCode >= 400){ 
+                    return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
+                }
+
+                user.idNotifications = data2.id
+
+                request(options3, async function(err3, response3){
                 
-                if (err) { return res.json({error: 'Internal error'}) }
-          
-                user.addressWallet = JSON.parse(response.body).address
-          
-                await user.save()
-                  
+                    if(err3){return res.json({error: 'Error interno'})} 
+                    
+                    const data3 = JSON.parse(response3.body)
+
+                    if(data3.statusCode && data3.statusCode >= 400){ 
+                        return res.json({error: `${data3.message} -Api tatum, Error ${data3.statusCode}-`})
+                    }       
+              
+                    user.addressWallet = data3.address
+    
+                    await user.save()
+                      
+                })
+    
             })
 
         })
@@ -412,7 +432,6 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
 
         const { email } = req.body
         const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, _id: 0})
-        console.log(email, user)
         
         const html = require('../PlantillasMail/mailVerification').mailVerification(user.emailHash)
     
@@ -445,36 +464,14 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
-
-router.post('/api/changemailverification', async(req, res) => {
-    try{
-        const { newEmail, oldEmail } = req.body
-
-        const user = await userModel.findOne({email: oldEmail}, {email: 1})
-
-        const repitedEmail = await userModel.findOne({email: newEmail}, {email: 1})
-        
-        if(repitedEmail){return res.json({error: 'This email is already registered'})}
-
-        user.email = newEmail
-
-        await user.save()
-        
-        res.json({msg: 'Email updated', email: user.email})
-
-    }catch(errror){
-        res.json({error: 'Insternal error'})
-    }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
 /* ------------------------------------------------------------------------------------------------------- */
 
 router.post('/api/forgotpassword', async(req, res) => {
     try{
        
         const { email } = req.body
+
+        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
         
         const user = await userModel.findOne({email: email}, {email: 1, forgotHash: 1})
         if(!user){

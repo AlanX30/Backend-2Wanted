@@ -40,8 +40,8 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
         if(reg_whiteSpace.test(name) || name.length < 4 || name.length > 15){
             return  res.json({error: 'The name must have more than 3 characters, maximum 15, must not have spaces'})
         }
-        if(price < 5000 || req.body.price === '' || req.body.price === undefined ){
-            return  res.json({error: 'Precio minimo de salas 5.000 COP'})
+        if(price < 0.00005 || req.body.price === '' || req.body.price === undefined ){
+            return  res.json({error: 'Minimum room value 0.00005 BTC'})
         }
     
         user.wallet = user.wallet - price
@@ -101,7 +101,6 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
             const parentUser = parent.users[0].parentId ? parent.users[0].parentId : 'Ninguno'
 
             const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: userToken.userName})
-            .sort({_id: -1})
 
             return res.json({data: salaById, parentId: parentUser, inBalance: balanceUser.accumulated})
         }
