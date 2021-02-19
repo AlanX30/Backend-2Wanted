@@ -3,6 +3,7 @@ const router = express.Router()
 const userModel = require('../models/Users')
 const request = require('request');
 const jwt = require('jsonwebtoken')
+const { v4: uuid } = require('uuid')
 const verifyToken = require('../Middlewares/verifyToken')
 const rateLimit = require("express-rate-limit")
 const balanceUserModel = require('../models/BalanceUser')
@@ -20,7 +21,7 @@ const limiter = rateLimit({
     max: 10, // start blocking after 10 requests
     message:
       "Too many accounts created from this IP, please try again after an hour",
-    handler: (res) => { res.json({error: 'Limite de llamadas'}) }
+    handler: (res) => { res.json({error: 'Call limit'}) }
 })
 
 
@@ -33,7 +34,7 @@ router.post('/api/users/signin', async(req, res) => {
 
         if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
     
-        const user = await userModel.findOne({email: email})
+        const user = await userModel.findOne({email: email}, {isVerified: 1, userName: 1, password: 1})
         
         if (!user){
             return res.json({auth: false, error: 'Email not registered'})
@@ -92,21 +93,35 @@ router.post('/api/users/signup', limiter, async (req, res) => {
             return res.json({error:'Passwords do not match'})
         }
             
-        const repitedEmail = await userModel.findOne({email: email})
-        
+        const repitedEmail = await userModel.findOne({email: email}, {email: 1})
+        const repitedUser = await userModel.findOne({userName: userName}, {userName: 1})
+
         if(repitedEmail) {
             return res.json({error: 'This email is registered'})
         }
+        if(repitedUser) {
+            return res.json({error: 'This username already exists'})
+        }
 
-        const emailHash = jwt.sign({}, process.env.EMAILHASH, {
-            expiresIn: 60 * 60 * 24
-        });
+        const random1 = Math.floor(Math.random() * (9-0+1))
+        const random2 = Math.floor(Math.random() * (9-0+1))
+        const random3 = Math.floor(Math.random() * (9-0+1))
+        const random4 = Math.floor(Math.random() * (9-0+1))
+        const random5 = Math.floor(Math.random() * (9-0+1))
+        const random6 = Math.floor(Math.random() * (9-0+1))
 
-        const newUser = new userModel({ userName, email, password, emailHash, forgotHash: emailHash })
+        const code = `${random1}${random2}${random3}${random4}${random5}${random6}`
+        const uuidHash = uuid() 
+
+        const emailHash = jwt.sign({code}, process.env.EMAILHASH, { expiresIn: 300 })
+        
+        const forgotHash = jwt.sign({uuidHash}, process.env.EMAILHASH, { expiresIn: 60 });
+
+        const newUser = new userModel({ userName, email, password, emailHash, forgotHash })
         newUser.password = await newUser.encryptPassword(password)
         await newUser.save()
 
-        const html = require('../PlantillasMail/mailVerification').mailVerification(emailHash)
+        const html = require('../PlantillasMail/mailVerification').mailVerification(code)
             
         let transporter = nodemailer.createTransport({
             host: 'smtp.zoho.com',
@@ -147,8 +162,26 @@ router.get('/api/me', verifyToken, async(req, res) => {
         if (!user){
             return res.status(404).json({auth: 'false', error: 'No user found'})
         }
+
+        const options = {
+            url: `https://blockchain.info/tobtc?currency=USD&value=1`,
+            method: 'GET',
+          }
+        
+          request(options,function(err, response){
+        
+              if(err){return res.json({error: 'Internal Error'})} 
+        
+              const data = JSON.parse(response.body)
+        
+              if(data.statusCode && data.statusCode >= 400){ 
+                return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+              }
+              
+              res.json({userData: user, usdBtc: data})
+              
+          })
     
-        res.json(user)
         
     }catch(error){
         res.json({error: 'Internal error'}
@@ -254,74 +287,26 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
     }
 })
 
-/* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/newWithdraw', verifyToken, async(req, res) => {
-
-    try{
-
-        const { amount } = req.body
-    
-        const user = await userModel.findById(req.userToken, {userName: 1, wallet: 1, email: 1})
-        const repited = await balanceUserModel.findOne({user: user.userName, state: 'pending'}, {state: 1})
-
-        if(user.wallet < amount){
-            return res.json({error: 'Insufficient money'})
-        }
-        if(amount < 20000) {
-            return res.json({error: 'Minimum withdrawal amount $ 20,000'})
-        }
-        if(repited){
-            return res.json({error: 'You still have a pending withdrawal'})
-        }
-    
-        user.wallet = user.wallet - amount
-    
-        const newWithdraw = new balanceUserModel({
-            user: user.userName, type: 'withdraw', withdrawAmount: amount, state: 'complete', wallet: user.wallet
-        })
-    
-        const html = require('../PlantillasMail/mail').withdrawInProcces
-    
-        let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
-            port: 465,
-            secure: true,
-            auth: {
-                user: 'admin@2wanted.com', 
-                pass: 'A31232723s', 
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        })
-    
-        await transporter.sendMail({
-            from: '"2wanted.com" <admin@2wanted.com>',
-            to: user.email,
-            subject: "Withdrawal In Process",
-            html: html
-        })
-    
-        await newWithdraw.save()
-        await user.save()
-    
-        res.json({msg: 'ok'})
-    
-    }catch(error){
-        res.json({error: 'Error interno'})
-    }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
 
 router.post('/api/mailverification', async(req, res) => {
     try {
 
-        const { emailHash } = req.body
+        const { email, code } = req.body
         
-        const user = await userModel.findOne({emailHash: emailHash}, {userName: 1, emailHash: 1, isVerified: 1, idWallet: 1})
-        if(!user){ return res.json({error: 'User is already verified'}) }
+        const user = await userModel.findOne({email: email}, {userName: 1, emailHash: 1, isVerified: 1, idWallet: 1})
+        let codeToken 
+
+        if (code.length > 6){ return res.json({error: 'Maximum 6 digits'})}
+        
+        try{
+            const decodedToken = await jwt.verify(user.emailHash, process.env.EMAILHASH)
+            codeToken = decodedToken.code
+            if(codeToken === code){}else{return res.json({error: 'The code does not match'})}
+        }catch(error){
+            return res.json({error: 'The code expired'})
+        }
+
 
         user.isVerified = true
         user.emailHash = null
@@ -342,7 +327,7 @@ router.post('/api/mailverification', async(req, res) => {
 
         request(options1, async function(err, response){
 
-            if(err){return res.json({error: 'Error interno'})} 
+            if(err){return res.json({error: 'Internal Error'})} 
 
             const data = JSON.parse(response.body)
 
@@ -379,7 +364,7 @@ router.post('/api/mailverification', async(req, res) => {
 
             request(options2, async function(err2, response2){
 
-                if(err2){return res.json({error: 'Error interno'})} 
+                if(err2){return res.json({error: 'Internal Error'})} 
 
                 const data2 = JSON.parse(response2.body)
 
@@ -391,7 +376,7 @@ router.post('/api/mailverification', async(req, res) => {
 
                 request(options3, async function(err3, response3){
                 
-                    if(err3){return res.json({error: 'Error interno'})} 
+                    if(err3){return res.json({error: 'Internal Error'})} 
                     
                     const data3 = JSON.parse(response3.body)
 
@@ -431,9 +416,24 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
     try {
 
         const { email } = req.body
-        const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, _id: 0})
+        const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, })
         
-        const html = require('../PlantillasMail/mailVerification').mailVerification(user.emailHash)
+        const random1 = Math.floor(Math.random() * (9-0+1))
+        const random2 = Math.floor(Math.random() * (9-0+1))
+        const random3 = Math.floor(Math.random() * (9-0+1))
+        const random4 = Math.floor(Math.random() * (9-0+1))
+        const random5 = Math.floor(Math.random() * (9-0+1))
+        const random6 = Math.floor(Math.random() * (9-0+1))
+
+        const code = `${random1}${random2}${random3}${random4}${random5}${random6}`
+
+        const emailHash = jwt.sign({code}, process.env.EMAILHASH, { expiresIn: 300 })
+
+        user.emailHash = emailHash
+
+        await user.save()
+
+        const html = require('../PlantillasMail/mailVerification').mailVerification(code)
     
         let transporter = nodemailer.createTransport({
             host: 'smtp.zoho.com',
@@ -474,11 +474,20 @@ router.post('/api/forgotpassword', async(req, res) => {
         if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
         
         const user = await userModel.findOne({email: email}, {email: 1, forgotHash: 1})
+
         if(!user){
             return res.json({error: 'Username does not exist'})
         }
+
+        const uuidHash = uuid() 
         
-        const html = require('../PlantillasMail/forgotPassword').forgotPassword(user.forgotHash)
+        const forgotHash = jwt.sign({uuidHash}, process.env.EMAILHASH, { expiresIn: 300 });
+
+        user.forgotHash = forgotHash
+
+        await user.save()
+        
+        const html = require('../PlantillasMail/forgotPassword').forgotPassword(forgotHash)
     
         let transporter = nodemailer.createTransport({
             host: 'smtp.zoho.com',
@@ -517,6 +526,12 @@ router.post('/api/changeForgotPassword', async(req, res) => {
         const user = await userModel.findOne({forgotHash: forgotHash}, {password: 1})
 
         if(!user){return res.json({error: 'This user does not exist, or this link is expired'})}
+
+        try{
+            await jwt.verify(forgotHash, process.env.EMAILHASH)
+        }catch(error){
+            return res.json({error: 'The code expired'})
+        }
 
         if(!reg_password.test(password)){
             return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})

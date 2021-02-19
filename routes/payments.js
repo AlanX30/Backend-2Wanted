@@ -37,7 +37,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
   
     request(options, function(err, response){
 
-        if(err){return res.json({error: 'Error interno'})} 
+        if(err){return res.json({error: 'Internal error'})} 
 
         const data = JSON.parse(response.body)
 
@@ -57,7 +57,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
       
         request(options2, async function(err2, response2){
 
-            if(err2){return res.json({error: 'Error interno'})} 
+            if(err2){return res.json({error: 'Internal Error'})} 
 
             const data2 = JSON.parse(response2.body)
     
@@ -124,7 +124,7 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
   
     request(options, async function(err, response){
 
-      if(err){return res.json({error: 'Error interno'})} 
+      if(err){return res.json({error: 'Internal error'})} 
 
       const data = JSON.parse(response.body)
 
@@ -224,7 +224,7 @@ router.post('/api/transactiondetail', async(req, res) => {
 
   request(options,function(err, response){
 
-      if(err){return res.json({error: 'Error interno'})} 
+      if(err){return res.json({error: 'Internal error'})} 
 
       const data = JSON.parse(response.body)
 
@@ -252,7 +252,7 @@ router.post('/api/tatumaccount', async(req, res) => {
     }
   
     request(options, function(err, response){
-        if(err){return res.json({error: 'Error interno'})} 
+        if(err){return res.json({error: 'Internal error'})} 
 
         const data = JSON.parse(response.body)
 

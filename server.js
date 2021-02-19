@@ -11,7 +11,7 @@ require('./database')
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    max: 200 // limit each IP to 100 requests per windowMs
 });
 
 ///* ------------Socket init--------------------------------- */
@@ -39,7 +39,6 @@ app.use('/home' ,express.static(path.join(__dirname + '/public')))
 app.use('/sala/:id' ,express.static(path.join(__dirname + '/public')))
 app.use('/profile' ,express.static(path.join(__dirname + '/public')))
 app.use('/balance' ,express.static(path.join(__dirname + '/public')))
-app.use('/mailverification/:token' ,express.static(path.join(__dirname + '/public')))
 app.use('/changepasswordemail/:token' ,express.static(path.join(__dirname + '/public')))
 
 /* ------------Listen--------------------------------- */

@@ -1,4 +1,4 @@
-const mailVerification = token => `
+const mailVerification = password => `
 <head>
     <style>
         .title {
@@ -29,8 +29,10 @@ const mailVerification = token => `
             margin-top: 21px;
             margin-left: 4px;
         }
-        a {
-            color: white;
+        p {
+            font-weight: 600;
+            color: #f09e49;
+            font-size: 20px;
         }
 
     </style>
@@ -42,9 +44,8 @@ const mailVerification = token => `
                     <img class="logo1" src="https://i.ibb.co/rcGw6hh/logo-1.png" alt="logo-1" border="0">
                     <img class="logo2" src="https://i.ibb.co/6FQ2zHT/2WANTED.png" alt="2WANTED" border="0" />
                 </div>
-                <h1 class="title">Verify your email to access with the following link</h1>
-                <a target="_blank" href='${process.env.URL_HOST}/mailverification/${token}'>${process.env.URL_HOST}/mailverification/${token}</a>
-
+                <h1 class="title">This is your verification code, go to the app and write it</h1>
+                <p>${password}</p>
         </div>
     </div>
 </body>

@@ -10,6 +10,7 @@ const BalanceUserSchema = new Schema({
     salaActive: {type: Boolean},
     salaCreator: {type: String},
     salaPrice:{type: Number},
+    salaRepeat:{type: Number},
     accumulated: {type: Number},
     fromUser: {type: String},
     toUser: {type: String},

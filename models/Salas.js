@@ -17,8 +17,8 @@ const SalaSchema = new Schema({
            repeated: { type: Number, default: 0}
         }
     ],
-    price: { type: Number },
-    name: { type: String, unique: true },
+    price: { type: Number, required: true, },
+    name: { type: String, unique: true, required: true, minLength: 4, maxLength: 16},
     creator: {type: String},
     usersNumber: { type: Number, default: 0 },
     paidUsers: { type: Number },

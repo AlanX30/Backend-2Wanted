@@ -21,6 +21,8 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     
         var parent1 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: userRoot}, {active: true} ] }}})
 
+        if(parent1.users.length === 0 ){ return res.json({error: 'You dont belong in this room'}) }
+
         var child2_1 = parent1.users[0].childsId.childId1
         var child2_2 = parent1.users[0].childsId.childId2
     
@@ -145,8 +147,8 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     ]
     
     if(toBalance === 'true'){
-        const salaPrice = await salasModel.findById(salaId, {paidUsers: 1, salaPrice: 1, price: 1, name: 1 })
-        const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot}, {accumulated: 1})
+        const salaPrice = await salasModel.findById(salaId, {paidUsers: 1, price: 1, name: 1 })
+        const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot, salaRepeat: parent1.users[0].repeated}, {salaPrice: 1, accumulated: 1})
         .sort({date: -1})
         const user = await userModel.findOne({userName: userRoot}, { wallet: 1 })
         
@@ -169,7 +171,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         
         const tAcum = acum3 + acum4
         let newCash = 0 
-        
+
         if(tAcum > balanceSala.accumulated){
             newCash = tAcum - balanceSala.accumulated
         }
@@ -179,7 +181,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
         if(newCash > 0){
 
             if(tAcum === full){
-                const noActive = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot, type: 'buy'}, {salaActive: 1})
+                const noActive = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot, type: 'buy', salaRepeat: parent1.users[0].repeated}, {salaActive: 1})
                 noActive.salaActive = false
                 parent1.users[0].active = false
 
@@ -189,28 +191,29 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
             
             user.wallet = user.wallet + newCash
             salaPrice.paidUsers = salaPrice.paidUsers + newCash
-            
+
             const newBalance = await new balanceUserModel({ 
                 user: userRoot,
                 salaName: salaPrice.name,
                 accumulated: tAcum,
                 won: newCash,
+                salaRepeat: parent1.users[0].repeated,
                 type: 'won',
                 wallet: user.wallet,
             })
-            
+
             await salaPrice.save()
             await user.save()
             await newBalance.save()
             
-            res.json({msg: 'Transaccion correcta'})
+            res.json({msg: 'Correct transaction'})
         }
     }else{
         res.json(allData)
     }
     }
     catch(error){
-        res.json({error: 'Error interno'})
+        res.json({error: 'Internal Error'})
     }
     
 })

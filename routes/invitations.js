@@ -3,7 +3,6 @@ const socket = require('../socket')
 const router = express.Router()
 const invitationModel = require('../models/Invitations')
 const userModel = require('../models/Users')
-const ConectedModel = require('../models/Conected')
 const verifyToken = require('../Middlewares/verifyToken')
 
 const userConecteds = []
@@ -19,27 +18,20 @@ socket.socket.io.on('connection', async(data) => {
             userConecteds.push(data.username)
             userSocket.push(data.id)
         }
-        
-     /*    console.log(userConecteds)
-        console.log(userSocket)
-      */
+     
     })
 
     data.on('disconnectClient', async(username) => {
         if(username){
-        /*     console.log(userSocket[userConecteds.indexOf( username )])
             userSocket.splice(userConecteds.indexOf( username ), 1)
             userConecteds.splice(userConecteds.indexOf( username ), 1)
-            console.log(userConecteds) */
         }
     })
 
     data.on('disconnect', async() => {
         if(data.username){
-            /* console.log(userSocket[userConecteds.indexOf( data.username )])
             userSocket.splice(userConecteds.indexOf( data.username ), 1)
             userConecteds.splice(userConecteds.indexOf( data.username ), 1)
-            console.log(userConecteds) */
         }
     })
     
@@ -70,7 +62,7 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
         }
 
         user.notifications = user.notifications + 1
-    
+        
         const invitation = new invitationModel({
             user: newUser,
             host,

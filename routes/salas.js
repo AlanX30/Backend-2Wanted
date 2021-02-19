@@ -13,11 +13,11 @@ router.post('/api/new/sala', verifyToken ,async(req, res) => {
 
         const name = req.body.name
         const price = parseFloat(req.body.price)
-        const user = await userModel.findById(req.userToken, {password: 0})
+        const user = await userModel.findById(req.userToken, {userName: 1, wallet: 1})
         const creator = user.userName
         const users = [
             {
-                user: user.userName,
+                user: creator,
                 parentId: undefined,
                 childsId: {
                     childId1: '',
@@ -83,24 +83,23 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
             }
         }
 
-        const salabyName = await salasModel.findOne({name: name}, {password: 0, users:0})
+        const salabyName = await salasModel.findOne({name: name}, {users:0})
 
         if(salabyName){
             return res.json({data: salabyName})
         }
         
-        const salaById = await salasModel.findById( salaId, {password: 0, users:0})
-
+        const salaById = await salasModel.findById( salaId, {users:0})
    
         if(salaById){
 
             const userToken = await userModel.findById(req.userToken, {userName: 1})
 
-            const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: userToken.userName }}})
-            
+            const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: userToken.userName}, {active: true} ] }}})
+
             const parentUser = parent.users[0].parentId ? parent.users[0].parentId : 'Ninguno'
 
-            const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: userToken.userName})
+            const balanceUser = await balanceUserModel.findOne({salaName: salaById.name, user: userToken.userName}, {accumulated: 1}).sort({date: -1})
 
             return res.json({data: salaById, parentId: parentUser, inBalance: balanceUser.accumulated})
         }
@@ -109,7 +108,7 @@ router.post('/api/search/sala', verifyToken, async(req, res) =>{
         
     }
     catch(error){
-        res.status(500).json({error: 'Internal error'})
+        res.json({error: 'Internal error'})
     }
     
 })
@@ -160,9 +159,9 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
 
             parentUser = randomParent.users[0].user
             
-        }else{ parentUser = req.body.parentUser }   
+        }else{ parentUser = req.body.parentUser } 
         
-        const user = await userModel.findById(req.userToken, {password: 0})
+        const user = await userModel.findById(req.userToken, {wallet: 1, userName: 1})
         const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1, creator: 1})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
@@ -220,6 +219,7 @@ router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
             salaId: salaId,
             salaCreator: price.creator,
             salaActive: true,
+            salaRepeat: countRepeated,
             accumulated: 0,
             type: 'buy',
             wallet: user.wallet,

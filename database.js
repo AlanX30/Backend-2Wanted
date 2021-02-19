@@ -9,5 +9,5 @@ mongoose.connect(URI, {
     useFindAndModify: false
 })
 .then(() => console.log('DB is connected'))
-.catch(err => console.log(`Hubo un error ${err}`))
+.catch(err => console.log(`Error: ${err}`))
 
