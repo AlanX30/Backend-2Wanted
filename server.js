@@ -8,7 +8,7 @@ const helmet = require('helmet')
 const csrf = require('csurf')
 const path = require('path')
 const rateLimit = require("express-rate-limit")
-const cors = require('cors')
+/* const cors = require('cors') */
 require('dotenv').config()
 require('./database')
 
@@ -29,7 +29,7 @@ socket.connect(server)
 ///* ------------Middlewares--------------------------------- */
 
 app.use(helmet())
-app.use(cors())
+/* app.use(cors()) */
 app.use(cookieParser(process.env.SECRET_COOKIE))
 app.use(limiter)
 app.use(bodyParser.json())
