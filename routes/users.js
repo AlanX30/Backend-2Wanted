@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const userModel = require('../models/Users')
-const request = require('request');
+const request = require('request')
+const safe = require('safe-regex')
 const jwt = require('jsonwebtoken')
 const { v4: uuid } = require('uuid')
 const verifyToken = require('../Middlewares/verifyToken')
@@ -16,25 +17,33 @@ const reg_email = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))
 const apiKey = process.env.BTCAPIKEY
 const xpub = process.env.XPUB
 
-const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour window
-    max: 10, // start blocking after 10 requests
-    message:
-      "Too many accounts created from this IP, please try again after an hour",
-    handler: (res) => { res.json({error: 'Call limit'}) }
+const limiterSign = rateLimit({
+    windowMs: 600000, // 10 minutos
+    max: 15, // start blocking after 15 requests
+    statusCode: 200, 
+    message: 'has exceeded the number of attempts, try again in 10 minutes'
 })
 
+const limiterEmail = rateLimit({
+    windowMs: 600000,
+    max: 10,
+    statusCode: 200, 
+    message: 'has exceeded the number of attempts, try again in 10 minutes'
+})
 
-
-router.post('/api/users/signin', async(req, res) => {
+router.post('/api/users/signin', limiterSign, async(req, res) => {
 
     try{
 
         const { email, password } = req.body
 
-        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
+        if(safe(reg_email.test(email))){
+            if(!reg_email.test(email)){
+                return res.json({error: 'Invalid Email'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
     
-        const user = await userModel.findOne({email: email}, {isVerified: 1, userName: 1, password: 1})
+        const user = await userModel.findOne({email: email}, {isVerified: 1, userName: 1, password: 1, accessToken: 1})
         
         if (!user){
             return res.json({auth: false, error: 'Email not registered'})
@@ -55,39 +64,77 @@ router.post('/api/users/signin', async(req, res) => {
         }
     
         const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
-            expiresIn: 60 * 60 * 24
-        });
+            expiresIn: 3600
+        })
+
+        user.accessToken = token
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            signed: true,
+            /* secure: true, */
+            sameSite: 'strict',
+            maxAge: 3600000
+        })
+
+        await user.save()
     
         res.status(200).json({
             auth: true,
-            userName: user.userName,
-            token
+            userName: user.userName
         });
-    }catch(error){
 
+    }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'}
 
     )}
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+
+router.get('/api/csrf', async(req, res) => {
+    try{
+        res.json({csrfToken: req.csrfToken ()})
+    }catch(error){
+        console.log(error)
+        res.json(error)
+    }
 })
 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', limiter, async (req, res) => {
+router.post('/api/users/signup', limiterSign, async (req, res) => {
     
     try{
 
         const { userName ,email, password, confirm_password } = req.body
-    
-        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
 
-        if(userName === undefined || userName.length < 4 || reg_whiteSpace.test(userName) ){
+        if(safe(reg_email.test(email))){
+            if(!reg_email.test(email)){
+                return res.json({error: 'Invalid Email'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
+
+        if(userName === undefined || userName.length < 4 || userName.length > 16){
             return res.json({error: 'The User must have 4 to 16 Characters, without spaces'})
         }
-        if(!reg_password.test(password)){
-            return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
-        }
+
+        if(safe(reg_whiteSpace.test(userName))){
+            const validDomain = reg_whiteSpace.test(userName)
+            if (validDomain){
+                return res.json({error: 'The User must have 4 to 16 Characters, without spaces'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
+        
+        if(safe(reg_whiteSpace.test(password))){
+            if(!reg_password.test(password)){
+                return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
 
         if(confirm_password === undefined || password !== confirm_password){
             return res.json({error:'Passwords do not match'})
@@ -146,6 +193,7 @@ router.post('/api/users/signup', limiter, async (req, res) => {
         res.json({msg: 'verifying email'})
         
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'}
     )}
 
@@ -153,16 +201,38 @@ router.post('/api/users/signup', limiter, async (req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.get('/api/me', verifyToken, async(req, res) => {
+router.post('/api/logout', verifyToken, async(req, res) => {
 
     try{
+        
+        const user = await userModel.findById(req.userToken, {accessToken: 1})
 
-        const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0})
+        user.accessToken = ''
+
+        await user.save()
+
+        res.clearCookie('token').json({msg: 'Cleared cookie'})
+
+    }catch(error){
+        console.log(error)
+        res.json({error: 'Internal error'}
+    )}
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/me', verifyToken, async(req, res) => {
+
+    try{
+        const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0, idWallet: 0, idNotifications: 0})
 
         if (!user){
-            return res.status(404).json({auth: 'false', error: 'No user found'})
+            return res.json({auth: 'false', error: 'No user found'})
         }
 
+        if(user.accessToken === req.signedCookies.token){}else{ return res.json({error: 'Token is closed'}) }
+        
         const options = {
             url: `https://blockchain.info/tobtc?currency=USD&value=1`,
             method: 'GET',
@@ -181,9 +251,9 @@ router.get('/api/me', verifyToken, async(req, res) => {
               res.json({userData: user, usdBtc: data})
               
           })
-    
         
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'}
     )}
 })
@@ -196,7 +266,7 @@ router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
 
         const { newPassword ,password, newEmail, email } = req.body
 
-        if(password){
+        if(newPassword){
 
             const user = await userModel.findById(req.userToken, {password: 1})
 
@@ -206,9 +276,11 @@ router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
                 return res.json({error: 'Password is incorrect'})
             }
 
-            if(!reg_password.test(newPassword)){
-                return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
-            }
+            if(safe(reg_password.test(newPassword))){
+                if(!reg_password.test(newPassword)){
+                    return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
+                }
+            }else{ return res.json({error: 'Internal error'}) }
 
             user.password = await user.encryptPassword( newPassword )
             
@@ -219,9 +291,19 @@ router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
         
         if(email){
 
-            if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
+            if(safe(reg_email.test(email))){
+                if(!reg_email.test(email)){
+                    return res.json({error: 'Invalid Email'})
+                }
+            }else{ return res.json({error: 'Internal error'}) }
 
-            const user = await userModel.findById(req.userToken, {email: 1})
+            const user = await userModel.findById(req.userToken, {email: 1, password: 1})
+
+            const passwordValidate = await user.matchPassword(password)
+
+            if (!passwordValidate){
+                return res.json({error: 'Password is incorrect'})
+            }
 
             if(email === user.email){
                 user.email = newEmail
@@ -231,7 +313,10 @@ router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
 
         }else{res.json({error: 'Internal error'})}   
 
-    }catch(error){res.json({error: 'Internal error'})}
+    }catch(error){
+        console.log(error)
+        res.json({error: 'Internal error'})
+    }
 
 })
 
@@ -259,7 +344,7 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
             const fechaFinal = new Date (getFechaFinal)
         
             const fechaBalance = await balanceUserModel.find({$and: [ {user: user.userName, date: {$gte: fechaInicial}},{date: {$lt: fechaFinal}}]})
-            .limit(perPage).skip((perPage * page) - perPage)
+            .limit(perPage).skip((perPage * page) - perPage).sort({date: -1})
             
             const count = await balanceUserModel.countDocuments({$and: [ {user: user.userName, date: {$gte: fechaInicial}},{date: {$lt: fechaFinal}}]})
 
@@ -283,13 +368,14 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
         }
 
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })
 
 
 
-router.post('/api/mailverification', async(req, res) => {
+router.post('/api/mailverification', limiterEmail, async(req, res) => {
     try {
 
         const { email, code } = req.body
@@ -334,7 +420,6 @@ router.post('/api/mailverification', async(req, res) => {
             if(data.statusCode && data.statusCode >= 400){ 
                 return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
             }
-
             user.idWallet = data.id
 
             const options2 = {
@@ -385,9 +470,7 @@ router.post('/api/mailverification', async(req, res) => {
                     }       
               
                     user.addressWallet = data3.address
-    
-                    await user.save()
-                      
+                    await user.save()  
                 })
     
             })
@@ -396,23 +479,35 @@ router.post('/api/mailverification', async(req, res) => {
 
 
         const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
-            expiresIn: 60 * 60 * 24
+            expiresIn: 3600
         });
+
+        user.accessToken = token
+
+        await user.save()
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            signed: true,
+            /* secure: true, */
+            sameSite: 'strict',
+            maxAge: 3600000
+        })
 
         res.json({
             auth: true,
-            userName: user.userName,
-            token
+            userName: user.userName
         })
 
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/mailverificationRefresh', async(req, res) => {
+router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
     try {
 
         const { email } = req.body
@@ -466,12 +561,16 @@ router.post('/api/mailverificationRefresh', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/forgotpassword', async(req, res) => {
+router.post('/api/forgotpassword', limiterEmail, async(req, res) => {
     try{
        
         const { email } = req.body
 
-        if(!reg_email.test(email)){ return res.json({error: 'Invalid Email'})}
+        if(safe(reg_email.test(email))){
+            if(!reg_email.test(email)){
+                return res.json({error: 'Invalid Email'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
         
         const user = await userModel.findOne({email: email}, {email: 1, forgotHash: 1})
 
@@ -512,17 +611,24 @@ router.post('/api/forgotpassword', async(req, res) => {
         res.json({msg: 'Email sent'})
 
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/changeForgotPassword', async(req, res) => {
+router.post('/api/changeForgotPassword', limiterEmail, async(req, res) => {
     try{
 
         const { forgotHash, password, confirmPassword } = req.body
 
+        if(safe(reg_whiteSpace.test(password))){
+            if(!reg_password.test(password)){
+                return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
+            }
+        }else{ return res.json({error: 'Internal error'}) }
+        
         const user = await userModel.findOne({forgotHash: forgotHash}, {password: 1})
 
         if(!user){return res.json({error: 'This user does not exist, or this link is expired'})}
@@ -533,9 +639,6 @@ router.post('/api/changeForgotPassword', async(req, res) => {
             return res.json({error: 'The code expired'})
         }
 
-        if(!reg_password.test(password)){
-            return res.json({error: 'The password must contain uppercase, lowercase and number, at least 8 characters'})
-        }
 
         if(confirmPassword === undefined || password !== confirmPassword){
             return res.json({error:'Passwords do not match'})
@@ -548,6 +651,51 @@ router.post('/api/changeForgotPassword', async(req, res) => {
         res.json({msg: 'Password updated successfully'})
 
     }catch(error){
+        console.log(error)
+        res.json({error: 'Internal error'})
+    }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/contact_us_email', limiterEmail, verifyToken, async(req, res) => {
+    try {
+
+        const { asunto, msg } = req.body
+
+        const user = await userModel.findById(req.userToken, {userName: 1, email: 1})
+
+        if(!user) { return res.json({error: 'Eror No User'})}
+
+        if(asunto.length > 50){ return res.json({error: 'The subject is very long'})}
+        if(msg.length > 1000){ return res.json({error: 'The message is very long'})}
+
+        const html = require('../PlantillasMail/mailSupport').mailSupport(msg, asunto, user.userName, user.email)
+
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'admin@2wanted.com', 
+                pass: 'A31232723s', 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: process.env.MY_SUPPORT_EMAIL,
+            subject: `Solicitud de soporte al usuario ${user.userName}`,
+            html: html
+        })
+
+        res.json({msg: 'the message has been sent to support, this request will be answered in your email'})
+
+    }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })

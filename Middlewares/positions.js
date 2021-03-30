@@ -1,6 +1,6 @@
 const salasModel = require('../models/Salas')
 
-const positions = async (req, res, next) => {
+const positions = async (req) => {
     
     const salaId = req.body.salaId
     
@@ -98,7 +98,6 @@ const positions = async (req, res, next) => {
 
     }
 
-    next()
 }
 
 module.exports = positions

@@ -42,17 +42,23 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
     try {
 
         const userHost = await userModel.findById(req.userToken, {userName: 1})
+        
         const { newUser, parentUsername, message, salaId, salaName } = req.body
+
+        if(newUser.length > 16){
+            return res.json({error: 'Invalid User'})
+        }
+
+        if(message.length > 50){
+            return res.json({error: 'Maximum 50 characters'})
+        }
+
         const price = parseFloat(req.body.price)
         
         const host = userHost.userName
 
         if(host === newUser){
             return res.json({error: `Can't send yourself an invitation`})
-        }
-
-        if(message.length > 50){
-            return res.json({error: 'Maximum 50 characters'})
         }
 
         const user = await userModel.findOne({userName: newUser}, {userName: 1, notifications: 1})
@@ -72,7 +78,7 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
             salaId,
             salaName,
         })
-    
+
         await invitation.save()
         await user.save()
         
@@ -119,6 +125,7 @@ router.post('/api/invitations', verifyToken, async(req, res, next) => {
             totalPages: Math.ceil(count / perPage)
         })
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })
@@ -137,6 +144,7 @@ router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
         res.json({msg: 'ok'})
  
     }catch(error){
+        console.log(error)
         res.json({error: 'Internal error'})
     }
 })

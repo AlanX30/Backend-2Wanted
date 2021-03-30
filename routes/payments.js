@@ -14,9 +14,25 @@ const apiKey= process.env.BTCAPIKEY
 router.post('/api/sendbtc', verifyToken, async(req, res) => {
   try{
 
-    const user = await userModel.findById(req.userToken, { idWallet: 1 })
+    const { address, amount, password } = req.body
 
-    const { address, amount } = req.body
+    if(address.length > 60){ return res.json({error: 'Invalid address'})}
+    if(amount.length > 16){ return res.json({error: 'Invalid amount'})}
+
+    const amountNumber = parseFloat(amount)
+
+    const user = await userModel.findById(req.userToken, { username: 1, wallet:1, idWallet: 1, password:1 })
+
+    if(user.wallet < amountNumber){return res.json({error: 'you dont have enough money'})}
+
+    const passwordValidate = await user.matchPassword(password)
+    
+    if (!passwordValidate){
+      return res.json({error: 'Password is incorrect'})
+    }
+
+    const fee = '0.0001'
+    const amountWithFee = parseFloat(amount) - parseFloat(fee)
 
     const options = {
       url: 'https://api-eu1.tatum.io/v3/offchain/bitcoin/transfer',
@@ -24,8 +40,8 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
       body: JSON.stringify({
         senderAccountId: user.idWallet,
         address: address,
-        amount: amount,
-        fee: "0.00005",
+        amount: amountWithFee.toString(),
+        fee: fee,
         signatureId: signatureId,
         xpub: xpub
       }),
@@ -66,13 +82,13 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
             }
             
             const txId = data2.txId
-            const amountNumber = parseFloat(amount)
 
             user.wallet = user.wallet - amountNumber
 
             const newWithdraw = new balanceUserModel({ 
               user: user.userName, 
               type: 'withdrawBtc', 
+              withdraw: true,
               txId: txId,
               toAddress: address,
               withdrawAmount: amountNumber,  
@@ -87,6 +103,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
     })
 
   }catch(error){
+    console.log(error)
     res.json({error: 'Internal error'})
   }
 })
@@ -96,9 +113,19 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
 router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
   try{
 
-    const { amount, username } = req.body
+    const { amount, username, password } = req.body
 
-    const user = await userModel.findById(req.userToken, { userName: 1, idWallet: 1, wallet: 1 })
+    if(username.length > 16){ return res.json({error: 'Invalid username'})}
+    if(amount.length > 16){ return res.json({error: 'Invalid amount'})}
+
+    const user = await userModel.findById(req.userToken, { userName: 1, idWallet: 1, wallet: 1, password:1 })
+
+    const passwordValidate = await user.matchPassword(password)
+    
+    if (!passwordValidate){
+      return res.json({error: 'Password is incorrect'})
+    }
+
     const userRecipient = await userModel.findOne({userName: username}, { userName: 1, idWallet: 1, wallet: 1 })
     const amountNumber = parseFloat(amount)
 
@@ -141,6 +168,7 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
           type: 'withdrawToUser', 
+          withdraw: true, 
           reference: data.reference,
           toUser: userRecipient.userName,
           withdrawAmount: amountNumber,  
@@ -165,7 +193,8 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
     })
 
   }catch(error){
-    res.json({error: 'error'})
+    console.log(error)
+    res.json({error: 'Internal error'})
   }
 })
 
@@ -194,6 +223,7 @@ router.post('/api/notificationbtc', async(req, res) => {
     const newBalance = await new balanceUserModel({ 
       user: user.userName,
       type: 'deposit',
+      depositBtc: true,
       wallet: user.wallet,
       depositAmount: depositAmount,
       txId: txId
@@ -203,40 +233,13 @@ router.post('/api/notificationbtc', async(req, res) => {
     await newBalance.save()
 
   }catch(error){
+    console.log(error)
     res.json({error: 'error'})
   }
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/transactiondetail', async(req, res) => {
-
-  const { signatureId } = req.body
-
-  const options = {
-    url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
-    method: 'GET',
-    headers: {
-        'x-api-key': apiKey
-    }
-  }
-
-  request(options,function(err, response){
-
-      if(err){return res.json({error: 'Internal error'})} 
-
-      const data = JSON.parse(response.body)
-
-      if(data.statusCode && data.statusCode >= 400){ 
-        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-      }
-      
-      res.json(data)
-  })
-
-})
-/* ------------------------------------------------------------------------------------------------------- */
 router.post('/api/tatumaccount', async(req, res) => {
   try{
 
@@ -264,9 +267,8 @@ router.post('/api/tatumaccount', async(req, res) => {
     })
 
   }catch(error){
-
+    console.log(error)
     res.json({error: 'Internal error'})
-
   }
 })
 
@@ -296,9 +298,8 @@ router.post('/api/DELETECC', async(req, res) => {
     
 
   }catch(error){
-
+    console.log(error)
     res.json({error: 'Internal Error'})
-
   }
 })
 

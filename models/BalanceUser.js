@@ -8,6 +8,8 @@ const BalanceUserSchema = new Schema({
     txId: {type: String},
     salaId: {type: Schema.Types.ObjectId, ref: 'Salas' },
     salaActive: {type: Boolean},
+    depositBtc: {type: Boolean},
+    withdraw: {type: Boolean},
     salaCreator: {type: String},
     salaPrice:{type: Number},
     salaRepeat:{type: Number},

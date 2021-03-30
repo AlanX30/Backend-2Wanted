@@ -5,11 +5,11 @@ const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
 const verifyToken = require('../Middlewares/verifyToken')
 
-/* ESTA ES LA RUTA MAS LARGA Y COMPLICADA PUESTO QUE MANEJA LA LOGICA DE LA FUNCION PRINCIPAL DE LA APP, EL ARBOL Y LA FACTURACION SEGUN USUARIO */
+const myIdWallet = process.env.ID_MYWALLET
 
 router.post('/api/in-sala', verifyToken, async(req, res) => {  
 
-    const userToken = await userModel.findById(req.userToken, {userName: 1})
+    const userToken = await userModel.findById(req.userToken, {userName: 1, idWallet: 1,})
 
     const salaId = req.query.id 
     const userRoot = userToken.userName
@@ -188,6 +188,34 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
                 await noActive.save()
                 await parent1.save()
             }
+
+            const options = {
+                url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
+                method: 'POST',
+                body: JSON.stringify({
+                  senderAccountId: myIdWallet,
+                  recipientAccountId: userRoot.idWallet,
+                  amount: newCash.toString(),
+                  anonymous: false,
+                  baseRate: 1,
+                }),
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
+                }
+            }
+            
+            request(options, async function(err, response){
+          
+                if(err){return res.json({error: 'Internal error'})} 
+          
+                const data = JSON.parse(response.body)
+          
+                if(data.statusCode && data.statusCode >= 400){ 
+                  return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+                }
+    
+            })
             
             user.wallet = user.wallet + newCash
             salaPrice.paidUsers = salaPrice.paidUsers + newCash
@@ -213,6 +241,7 @@ router.post('/api/in-sala', verifyToken, async(req, res) => {
     }
     }
     catch(error){
+        console.log(error)
         res.json({error: 'Internal Error'})
     }
     

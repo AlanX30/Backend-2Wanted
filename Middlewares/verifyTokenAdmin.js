@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 
 const verifyToken = async(req, res, next) => {
 
-    const token = req.signedCookies.token
+    const token = req.signedCookies.tokenAdmin
 
     if (!token) {
         return res.json({auth: 'false', error: 'No token provided'})
@@ -10,9 +10,7 @@ const verifyToken = async(req, res, next) => {
 
     try{
         
-        const decodedToken = await jwt.verify(token, process.env.SECRET_JSONWEBTOKEN)
-        
-        req.userToken = decodedToken.id
+        await jwt.verify(token, process.env.TOKEN_ADMIN)
 
 
     }catch(error){
