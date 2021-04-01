@@ -5,6 +5,7 @@ const app = express()
 const bodyParser = require('body-parser' )
 const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
+const csp = require('helmet-csp')
 const csrf = require('csurf')
 const path = require('path')
 const crypto = require('crypto')
@@ -36,16 +37,22 @@ app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
 app.use(csrfProtection)
-
-app.use((req, res, next) => {
-    res.locals.nonce = crypto.randomBytes(16).toString("hex");
-    next();
-})
-
+app.use(
+    csp({
+      directives: {
+        defaultSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+      reportOnly: false,
+    })
+)
 app.use(function (req, res, next) {
     res.setHeader(
-      'Content-Security-Policy-Report-Only',
-      `default-src 'self'; font-src 'self' https://fonts.gstatic.com/ https://fonts.googleapis.com/; img-src 'self'; script-src 'self' 'nonce-${res.locals.nonce}'; style-src 'self' https://fonts.googleapis.com/ @sweetalert2.all.js:3181; frame-src 'self'`
+      'Content-Security-Policy',
+      `font-src * https://fonts.gstatic.com/ https://fonts.googleapis.com/`
     );
     next();
 })
