@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const csrf = require('csurf')
 const path = require('path')
+const crypto = require('crypto')
 const rateLimit = require("express-rate-limit")
 /* const cors = require('cors') */
 require('dotenv').config()
@@ -18,7 +19,7 @@ const csrfProtection = csrf({
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    max: 200 // limit each IP to 100 requests per windowMs
 });
 
 ///* ------------Socket init--------------------------------- */
@@ -29,13 +30,25 @@ socket.connect(server)
 ///* ------------Middlewares--------------------------------- */
 
 app.use(helmet())
-/* app.use(cors()) */
 app.use(cookieParser(process.env.SECRET_COOKIE))
 app.use(limiter)
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
 app.use(csrfProtection)
+
+app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(16).toString("hex");
+    next();
+})
+
+app.use(function (req, res, next) {
+    res.setHeader(
+      'Content-Security-Policy-Report-Only',
+      `default-src 'self'; font-src 'self' https://fonts.gstatic.com/ https://fonts.googleapis.com/; img-src 'self'; script-src 'self' 'nonce-${res.locals.nonce}'; style-src 'self' https://fonts.googleapis.com/ @sweetalert2.all.js:3181; frame-src 'self'`
+    );
+    next();
+})
 
 /* ------------Router--------------------------------- */
 
