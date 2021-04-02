@@ -17,7 +17,7 @@ router.post('/api/admin/signin', async(req, res) => {
     try{
         const { password, id } = req.body
 
-        const user = await userModel.findOne({user: userSignin}, {password: 1})
+        const user = await userModel.findOne({userName: userSignin}, {password: 1})
 
         if(!user){ return res.json({auth: false, error: 'Id is incorrect'}) }
 
@@ -36,7 +36,7 @@ router.post('/api/admin/signin', async(req, res) => {
         res.cookie('tokenAdmin', token, {
             httpOnly: true,
             signed: true,
-            /* secure: true, */
+            secure: true,
             sameSite: 'strict',
             maxAge: 600000
         })
@@ -182,12 +182,12 @@ router.post('/api/admin/mailpersonalized', async(req, res) => {
         const html = require('../PlantillasMail/mailPersonalized').mailPersonalized(msg)
 
         let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
+            host: 'mail.privateemail.com',
             port: 465,
             secure: true,
             auth: {
-              user: 'admin@2wanted.com', 
-              pass: 'A31232723s', 
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
             },
             tls: {
                 rejectUnauthorized: false

@@ -72,7 +72,7 @@ router.post('/api/users/signin', limiterSign, async(req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             signed: true,
-            /* secure: true, */
+            secure: true,
             sameSite: 'strict',
             maxAge: 3600000
         })
@@ -171,12 +171,12 @@ router.post('/api/users/signup', limiterSign, async (req, res) => {
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
             
         let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
+            host: 'mail.privateemail.com',
             port: 465,
             secure: true,
             auth: {
-                user: 'admin@2wanted.com', 
-                pass: 'A31232723s', 
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
             },
             tls: {
                 rejectUnauthorized: false
@@ -186,7 +186,7 @@ router.post('/api/users/signup', limiterSign, async (req, res) => {
         await transporter.sendMail({
             from: '"2wanted.com" <admin@2wanted.com>',
             to: newUser.email,
-            subject: "Verificacion de Email",
+            subject: "Email verification",
             html: html
         })
 
@@ -429,7 +429,7 @@ router.post('/api/mailverification', limiterEmail, async(req, res) => {
                   type: "ACCOUNT_INCOMING_BLOCKCHAIN_TRANSACTION",
                   attr: {
                     id: data.id,
-                    url: "https://2wanted.io/api/notificationbtc"
+                    url: "https://2wanted.com/api/notificationbtc"
                   }
                 }),
                 headers: {
@@ -489,7 +489,7 @@ router.post('/api/mailverification', limiterEmail, async(req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             signed: true,
-            /* secure: true, */
+            secure: true,
             sameSite: 'strict',
             maxAge: 3600000
         })
@@ -531,12 +531,12 @@ router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
     
         let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
+            host: 'mail.privateemail.com',
             port: 465,
             secure: true,
             auth: {
-                user: 'admin@2wanted.com', 
-                pass: 'A31232723s', 
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
             },
             tls: {
                 rejectUnauthorized: false
@@ -589,12 +589,12 @@ router.post('/api/forgotpassword', limiterEmail, async(req, res) => {
         const html = require('../PlantillasMail/forgotPassword').forgotPassword(forgotHash)
     
         let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
+            host: 'mail.privateemail.com',
             port: 465,
             secure: true,
             auth: {
-                user: 'admin@2wanted.com', 
-                pass: 'A31232723s', 
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
             },
             tls: {
                 rejectUnauthorized: false
@@ -604,7 +604,7 @@ router.post('/api/forgotpassword', limiterEmail, async(req, res) => {
         await transporter.sendMail({
             from: '"2wanted.com" <admin@2wanted.com>',
             to: user.email,
-            subject: "Verificacion de Email",
+            subject: "Email Verification",
             html: html
         })
 
@@ -673,12 +673,12 @@ router.post('/api/contact_us_email', limiterEmail, verifyToken, async(req, res) 
         const html = require('../PlantillasMail/mailSupport').mailSupport(msg, asunto, user.userName, user.email)
 
         let transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
+            host: 'mail.privateemail.com',
             port: 465,
             secure: true,
             auth: {
-                user: 'admin@2wanted.com', 
-                pass: 'A31232723s', 
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
             },
             tls: {
                 rejectUnauthorized: false
