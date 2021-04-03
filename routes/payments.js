@@ -15,12 +15,12 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
   try{
 
     const { address, amount, password } = req.body
-
+    console.log('Llego punto 1 envioBtc')
     if(address.length > 60){ return res.json({error: 'Invalid address'})}
     if(amount.length > 16){ return res.json({error: 'Invalid amount'})}
 
     const amountNumber = parseFloat(amount)
-
+    console.log('Llego punto 2 envioBtc')
     const user = await userModel.findById(req.userToken, { username: 1, wallet:1, idWallet: 1, password:1 })
 
     if(user.wallet < amountNumber){return res.json({error: 'you dont have enough money'})}
@@ -62,7 +62,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
         }
 
         const signatureId = data.signatureId
-
+        console.log('Llego punto 2 envioBtc', data)
         const options2 = {
           url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
           method: 'GET',
@@ -80,9 +80,9 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
             if(data2.statusCode && data2.statusCode >= 400){ 
               return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
             }
-            
             const txId = data2.txId
-
+            console.log('Llego punto 3 envioBtc', data2)
+            
             user.wallet = user.wallet - amountNumber
 
             const newWithdraw = new balanceUserModel({ 
@@ -117,7 +117,7 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
 
     if(username.length > 16){ return res.json({error: 'Invalid username'})}
     if(amount.length > 16){ return res.json({error: 'Invalid amount'})}
-
+    console.log('Llego punto 1 envioUser')
     const user = await userModel.findById(req.userToken, { userName: 1, idWallet: 1, wallet: 1, password:1 })
 
     const passwordValidate = await user.matchPassword(password)
@@ -128,7 +128,7 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
 
     const userRecipient = await userModel.findOne({userName: username}, { userName: 1, idWallet: 1, wallet: 1 })
     const amountNumber = parseFloat(amount)
-
+    console.log('Llego punto 2 envioUser')
     if(!userRecipient){ return res.json({error: 'The username does not exist'}) }
 
     if(user.wallet < amountNumber){ return res.json({error: 'Insufficient balance'}) }
@@ -158,13 +158,13 @@ router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
       if(data.statusCode && data.statusCode >= 400){ 
         return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
       }
-
+      console.log('Llego punto 3 envioUser')
       if(data.reference){
-
+        console.log('Llego punto 4 envioUser')
         user.wallet = user.wallet - amountNumber
 
         userRecipient.wallet = userRecipient.wallet + amountNumber
-
+        console.log('Llego punto 5 envioUser')
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
           type: 'withdrawToUser', 
@@ -205,8 +205,8 @@ router.post('/api/notificationbtc', async(req, res) => {
 
     const { accountId, txId, amount } = req.body
 
+    console.log('Llego punto 1 deposito' ,req.body)
     const repited = await balanceUserModel.findOne({txId: txId}, {txId: 1})
-
     if(repited){ return }
 
     const user = await userModel.findOne({idWallet: accountId}, { wallet: 1, userName: 1, firstDeposit: 1 })
@@ -219,7 +219,7 @@ router.post('/api/notificationbtc', async(req, res) => {
     }
 
     user.wallet = user.wallet + depositAmount
-        
+    console.log('Llego punto 2 deposito')    
     const newBalance = await new balanceUserModel({ 
       user: user.userName,
       type: 'deposit',
@@ -228,7 +228,7 @@ router.post('/api/notificationbtc', async(req, res) => {
       depositAmount: depositAmount,
       txId: txId
     })
-        
+    console.log('Llego punto 3 deposito')     
     await user.save()
     await newBalance.save()
 
