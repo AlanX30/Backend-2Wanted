@@ -12,7 +12,6 @@ const verifyToken = async(req, res, next) => {
         
         await jwt.verify(token, process.env.TOKEN_ADMIN)
 
-
     }catch(error){
 
         return res.json({error: 'Token error'})

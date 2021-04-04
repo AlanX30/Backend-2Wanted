@@ -3,6 +3,7 @@ const router = express.Router()
 const balanceUserModel = require('../models/BalanceUser')
 const salasModel = require('../models/Salas')
 const withdrawModel = require('../models/Withdraw')
+const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const userModel = require('../models/Users')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -55,7 +56,7 @@ router.post('/api/admin/signin', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/withdraw2wantedlist', async(req, res) => {
+router.post('/api/admin/withdraw2wantedlist', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -85,7 +86,7 @@ router.post('/api/admin/withdraw2wantedlist', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/balanceToExcel', async(req, res) => {
+router.post('/api/admin/balanceToExcel', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -167,7 +168,7 @@ router.post('/api/admin/balanceToExcel', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/mailpersonalized', async(req, res) => {
+router.post('/api/admin/mailpersonalized', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -213,7 +214,7 @@ router.post('/api/admin/mailpersonalized', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/userhistorialbalance', async(req, res) => {
+router.post('/api/admin/userhistorialbalance', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -270,7 +271,7 @@ router.post('/api/admin/userhistorialbalance', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/depositUsersList', async(req, res) => {
+router.post('/api/admin/depositUsersList', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -302,7 +303,7 @@ router.post('/api/admin/depositUsersList', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/withdrawUsersList', async(req, res) => {
+router.post('/api/admin/withdrawUsersList', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -334,7 +335,7 @@ router.post('/api/admin/withdrawUsersList', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/BalanceUserInSala', async(req, res) => {
+router.post('/api/admin/BalanceUserInSala', verifyTokenAdmin, async(req, res) => {
 
     try{
         

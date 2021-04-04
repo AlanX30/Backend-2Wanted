@@ -15,7 +15,7 @@ const id_myWallet= process.env.ID_MYWALLET
 let ActualtotalWon = 0
 let actual2wanted = 0
 
-router.post('/api/admin/generalTotalBalance', async(req, res) => {
+router.post('/api/admin/generalTotalBalance', verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -114,7 +114,7 @@ router.post('/api/admin/generalTotalBalance', async(req, res) => {
 
 let disponible = 0
 
-router.post('/api/admin/user2wanted_withdraw', async(req, res) => {
+router.post('/api/admin/user2wanted_withdraw', verifyTokenAdmin, async(req, res) => {
 
     try{
         
