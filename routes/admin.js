@@ -29,7 +29,7 @@ router.post('/api/admin/signin', async(req, res) => {
 
         if(!validPassword){ return res.json({auth: false, error: 'Password is incorrect'}) }
 
-        const token = jwt.sign({}, process.env.SECRET_JSONWEBTOKEN, {
+        const token = jwt.sign({}, process.env.TOKEN_ADMIN, {
             expiresIn: 600
         })
 

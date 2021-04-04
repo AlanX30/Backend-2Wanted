@@ -1,4 +1,8 @@
 const jwt = require('jsonwebtoken')
+const path = require('path')
+const fs = require('fs')
+
+const publicKey = fs.readFileSync(path.join(__dirname +'/public.key'), 'utf8')
 
 const verifyToken = async(req, res, next) => {
 
@@ -8,9 +12,11 @@ const verifyToken = async(req, res, next) => {
         return res.json({auth: 'false', error: 'No token provided'})
     }
 
+    const tokenSplit = token.split(" ")[1]
+    
     try{
         
-        const decodedToken = await jwt.verify(token, process.env.SECRET_JSONWEBTOKEN)
+        const decodedToken = await jwt.verify(tokenSplit, publicKey, { algorithm: 'RS256' })
         
         req.userToken = decodedToken.id
 

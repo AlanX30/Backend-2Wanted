@@ -9,6 +9,8 @@ const verifyToken = require('../Middlewares/verifyToken')
 const rateLimit = require("express-rate-limit")
 const balanceUserModel = require('../models/BalanceUser')
 const nodemailer = require('nodemailer')
+const fs = require('fs')
+const path = require('path')
 
 const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_whiteSpace = /^$|\s+/
@@ -16,6 +18,8 @@ const reg_email = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))
 
 const apiKey = process.env.BTCAPIKEY
 const xpub = process.env.XPUB
+
+const privateKey = fs.readFileSync(path.join(__dirname +'/private.key'), 'utf8')
 
 const limiterSign = rateLimit({
     windowMs: 600000, // 10 minutos
@@ -46,13 +50,13 @@ router.post('/api/users/signin', limiterSign, async(req, res) => {
         const user = await userModel.findOne({email: email}, {isVerified: 1, userName: 1, password: 1, accessToken: 1})
         
         if (!user){
-            return res.json({auth: false, error: 'Email not registered'})
+            return res.json({auth: false, error: 'Wrong password or email'})
         }
         
         const passwordValidate = await user.matchPassword(password)
     
         if (!passwordValidate){
-            return res.json({auth: false, error: 'Password is incorrect'})
+            return res.json({auth: false, error: 'Wrong password or email'})
         }
     
         if(user.isVerified === false){
@@ -63,13 +67,14 @@ router.post('/api/users/signin', limiterSign, async(req, res) => {
             })
         }
     
-        const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
-            expiresIn: 3600
+        const token = jwt.sign({id: user._id}, privateKey, {
+            expiresIn: 3600,
+            algorithm: 'RS256'
         })
 
-        user.accessToken = token
+        user.accessToken = `Bearer ${token}`
 
-        res.cookie('token', token, {
+        res.cookie('token', `Bearer ${token}`, {
             httpOnly: true,
             signed: true,
             secure: true,
@@ -471,32 +476,33 @@ router.post('/api/mailverification', limiterEmail, async(req, res) => {
               
                     user.addressWallet = data3.address
                     await user.save()  
+
+                    const token = jwt.sign({id: user._id}, privateKey, {
+                        expiresIn: 3600,
+                        algorithm: 'RS256'
+                    });
+            
+                    user.accessToken = `Bearer ${token}`
+            
+                    await user.save()
+            
+                    res.cookie('token', `Bearer ${token}`, {
+                        httpOnly: true,
+                        signed: true,
+                        secure: true,
+                        sameSite: 'strict',
+                        maxAge: 3600000
+                    })
+            
+                    res.json({
+                        auth: true,
+                        userName: user.userName
+                    })
+
                 })
     
             })
 
-        })
-
-
-        const token = jwt.sign({id: user._id}, process.env.SECRET_JSONWEBTOKEN, {
-            expiresIn: 3600
-        });
-
-        user.accessToken = token
-
-        await user.save()
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            signed: true,
-            secure: true,
-            sameSite: 'strict',
-            maxAge: 3600000
-        })
-
-        res.json({
-            auth: true,
-            userName: user.userName
         })
 
     }catch(error){
