@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const balanceUserModel = require('../models/BalanceUser')
 const request = require('request')
 const salasModel = require('../models/Salas')
