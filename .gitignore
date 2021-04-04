@@ -11,10 +11,10 @@
 
 # production
 /build
-Middlewares/private.key
+routes/private.key
 Middlewares/public.key
 /Middlewares/public.key
-/Middlewares/private.key
+/routes/private.key
 
 # misc
 
