@@ -6,16 +6,10 @@ const bodyParser = require('body-parser' )
 const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const csp = require('helmet-csp')
-const csrf = require('csurf')
 const path = require('path')
 const rateLimit = require("express-rate-limit")
-/* const cors = require('cors') */
 require('dotenv').config()
 require('./database')
-
-const csrfProtection = csrf({ 
-    cookie: true 
-});
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -35,7 +29,6 @@ app.use(limiter)
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
-app.use(csrfProtection)
 app.use(
     csp({
       directives: {

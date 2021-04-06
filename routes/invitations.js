@@ -1,9 +1,14 @@
 const express = require('express')
 const socket = require('../socket')
 const router = express.Router()
+const csrf = require('csurf')
 const invitationModel = require('../models/Invitations')
 const userModel = require('../models/Users')
 const verifyToken = require('../Middlewares/verifyToken')
+
+const csrfProtection = csrf({ 
+    cookie: true 
+})
 
 const userConecteds = []
 const userSocket = []
@@ -37,7 +42,7 @@ socket.socket.io.on('connection', async(data) => {
     
 })
 
-router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
+router.post('/api/new-invitation', csrfProtection, verifyToken, async(req, res, next) => {
     
     try {
 
@@ -102,7 +107,7 @@ router.post('/api/new-invitation', verifyToken, async(req, res, next) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/invitations', verifyToken, async(req, res, next) => {
+router.post('/api/invitations', csrfProtection, verifyToken, async(req, res, next) => {
 
     try {
 
@@ -132,7 +137,7 @@ router.post('/api/invitations', verifyToken, async(req, res, next) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
-router.post('/api/invitations-reset', verifyToken, async(req, res, next) => {
+router.post('/api/invitations-reset', csrfProtection, verifyToken, async(req, res, next) => {
 
     try {
         const user = await userModel.findById(req.userToken, {notifications: 1})

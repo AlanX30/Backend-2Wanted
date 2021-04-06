@@ -3,6 +3,7 @@ const router = express.Router()
 const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const balanceUserModel = require('../models/BalanceUser')
 const request = require('request')
+const csrf = require('csurf')
 const salasModel = require('../models/Salas')
 const withdrawModel = require('../models/Withdraw')
 const userModel = require('../models/Users')
@@ -13,10 +14,14 @@ const signatureId = process.env.SIGNATURE_ID
 const apiKey= process.env.BTCAPIKEY
 const id_myWallet= process.env.ID_MYWALLET
 
+const csrfProtection = csrf({ 
+    cookie: true 
+})
+
 let ActualtotalWon = 0
 let actual2wanted = 0
 
-router.post('/api/admin/generalTotalBalance', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -115,7 +120,7 @@ router.post('/api/admin/generalTotalBalance', verifyTokenAdmin, async(req, res) 
 
 let disponible = 0
 
-router.post('/api/admin/user2wanted_withdraw', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/user2wanted_withdraw', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         

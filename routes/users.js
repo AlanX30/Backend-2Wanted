@@ -3,6 +3,7 @@ const router = express.Router()
 const userModel = require('../models/Users')
 const request = require('request')
 const safe = require('safe-regex')
+const csrf = require('csurf')
 const jwt = require('jsonwebtoken')
 const { v4: uuid } = require('uuid')
 const verifyToken = require('../Middlewares/verifyToken')
@@ -21,6 +22,10 @@ const xpub = process.env.XPUB
 
 const privateKey = fs.readFileSync(path.join(__dirname +'/private.key'), 'utf8')
 
+const csrfProtection = csrf({ 
+    cookie: true 
+})
+
 const limiterSign = rateLimit({
     windowMs: 600000, // 10 minutos
     max: 15, // start blocking after 15 requests
@@ -35,7 +40,7 @@ const limiterEmail = rateLimit({
     message: 'has exceeded the number of attempts, try again in 10 minutes'
 })
 
-router.post('/api/users/signin', limiterSign, async(req, res) => {
+router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) => {
 
     try{
 
@@ -99,7 +104,7 @@ router.post('/api/users/signin', limiterSign, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.get('/api/csrf', async(req, res) => {
+router.get('/api/csrf', csrfProtection, async(req, res) => {
     try{
         res.json({csrfToken: req.csrfToken ()})
     }catch(error){
@@ -112,7 +117,7 @@ router.get('/api/csrf', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', limiterSign, async (req, res) => {
+router.post('/api/users/signup', csrfProtection, limiterSign, async (req, res) => {
     
     try{
 
@@ -206,7 +211,7 @@ router.post('/api/users/signup', limiterSign, async (req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/logout', verifyToken, async(req, res) => {
+router.post('/api/logout', csrfProtection, verifyToken, async(req, res) => {
 
     try{
         
@@ -227,7 +232,7 @@ router.post('/api/logout', verifyToken, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/me', verifyToken, async(req, res) => {
+router.post('/api/me', csrfProtection, verifyToken, async(req, res) => {
 
     try{
         const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0, idWallet: 0, idNotifications: 0})
@@ -265,7 +270,7 @@ router.post('/api/me', verifyToken, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
+router.post('/edit/passwordemail', csrfProtection, verifyToken, async(req, res, next) => {
 
     try{
 
@@ -327,7 +332,7 @@ router.post('/edit/passwordemail', verifyToken, async(req, res, next) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/userbalance', verifyToken, async(req, res) => {
+router.post('/api/userbalance', csrfProtection, verifyToken, async(req, res) => {
     
     try{
 
@@ -380,7 +385,7 @@ router.post('/api/userbalance', verifyToken, async(req, res) => {
 
 
 
-router.post('/api/mailverification', limiterEmail, async(req, res) => {
+router.post('/api/mailverification', csrfProtection, limiterEmail, async(req, res) => {
     try {
 
         const { email, code } = req.body
@@ -436,6 +441,7 @@ router.post('/api/mailverification', limiterEmail, async(req, res) => {
                     id: data.id,
                     url: "https://2wanted.com/api/notificationbtc"
                   }
+                  
                 }),
                 headers: {
                     'x-api-key': apiKey,
@@ -513,7 +519,7 @@ router.post('/api/mailverification', limiterEmail, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
+router.post('/api/mailverificationRefresh', csrfProtection, limiterEmail, async(req, res) => {
     try {
 
         const { email } = req.body
@@ -567,7 +573,7 @@ router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/forgotpassword', limiterEmail, async(req, res) => {
+router.post('/api/forgotpassword', csrfProtection, limiterEmail, async(req, res) => {
     try{
        
         const { email } = req.body
@@ -624,7 +630,7 @@ router.post('/api/forgotpassword', limiterEmail, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/changeForgotPassword', limiterEmail, async(req, res) => {
+router.post('/api/changeForgotPassword', csrfProtection, limiterEmail, async(req, res) => {
     try{
 
         const { forgotHash, password, confirmPassword } = req.body
@@ -664,7 +670,7 @@ router.post('/api/changeForgotPassword', limiterEmail, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/contact_us_email', limiterEmail, verifyToken, async(req, res) => {
+router.post('/api/contact_us_email', csrfProtection, limiterEmail, verifyToken, async(req, res) => {
     try {
 
         const { asunto, msg } = req.body

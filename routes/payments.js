@@ -4,6 +4,11 @@ const request = require('request')
 const userModel = require('../models/Users')
 const verifyToken = require('../Middlewares/verifyToken')
 const balanceUserModel = require('../models/BalanceUser')
+const csrf = require('csurf')
+
+const csrfProtection = csrf({ 
+  cookie: true 
+})
 
 const xpub = process.env.XPUB
 const signatureId = process.env.SIGNATURE_ID
@@ -11,7 +16,7 @@ const apiKey= process.env.BTCAPIKEY
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/sendbtc', verifyToken, async(req, res) => {
+router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
   try{
 
     const { address, amount, password } = req.body
@@ -110,7 +115,7 @@ router.post('/api/sendbtc', verifyToken, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/sendinternalbtc', verifyToken, async(req, res) => {
+router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res) => {
   try{
 
     const { amount, username, password } = req.body
@@ -274,7 +279,7 @@ router.post('/api/tatumaccount', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/DELETECC', async(req, res) => {
+router.post('/api/DELETECC', csrfProtection, async(req, res) => {
   try{
 
     const { id } = req.body

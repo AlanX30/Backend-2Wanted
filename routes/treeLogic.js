@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const csrf = require('csurf')
 const salasModel = require('../models/Salas')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
@@ -7,7 +8,11 @@ const verifyToken = require('../Middlewares/verifyToken')
 
 const myIdWallet = process.env.ID_MYWALLET
 
-router.post('/api/in-sala', verifyToken, async(req, res) => {  
+const csrfProtection = csrf({ 
+    cookie: true 
+})
+
+router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {  
 
     const userToken = await userModel.findById(req.userToken, {userName: 1, idWallet: 1,})
 

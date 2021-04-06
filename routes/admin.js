@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const balanceUserModel = require('../models/BalanceUser')
 const salasModel = require('../models/Salas')
+const csrf = require('csurf')
 const withdrawModel = require('../models/Withdraw')
 const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const userModel = require('../models/Users')
@@ -9,11 +10,15 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const excel = require('exceljs')
 
+const csrfProtection = csrf({ 
+    cookie: true 
+})
+
 /* ------------------------------------------------------------------------------------------------------- */
 
 const userSignin = process.env.USER_ADMIN_SIGNIN
 
-router.post('/api/admin/signin', async(req, res) => {
+router.post('/api/admin/signin', csrfProtection, async(req, res) => {
 
     try{
         const { password, id } = req.body
@@ -56,7 +61,7 @@ router.post('/api/admin/signin', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/withdraw2wantedlist', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/withdraw2wantedlist', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -86,7 +91,7 @@ router.post('/api/admin/withdraw2wantedlist', verifyTokenAdmin, async(req, res) 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/balanceToExcel', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/balanceToExcel', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -168,7 +173,7 @@ router.post('/api/admin/balanceToExcel', verifyTokenAdmin, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/mailpersonalized', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/mailpersonalized', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -214,7 +219,7 @@ router.post('/api/admin/mailpersonalized', verifyTokenAdmin, async(req, res) => 
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/userhistorialbalance', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/userhistorialbalance', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -271,7 +276,7 @@ router.post('/api/admin/userhistorialbalance', verifyTokenAdmin, async(req, res)
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/depositUsersList', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/depositUsersList', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -303,7 +308,7 @@ router.post('/api/admin/depositUsersList', verifyTokenAdmin, async(req, res) => 
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/withdrawUsersList', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/withdrawUsersList', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
@@ -335,7 +340,7 @@ router.post('/api/admin/withdrawUsersList', verifyTokenAdmin, async(req, res) =>
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/BalanceUserInSala', verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/BalanceUserInSala', csrfProtection, verifyTokenAdmin, async(req, res) => {
 
     try{
         
