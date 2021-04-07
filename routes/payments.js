@@ -56,7 +56,7 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
       }
     }
   
-    request(options, function(err, response){
+    request(options, async function(err, response){
 
         if(err){return res.json({error: 'Internal error'})} 
 
