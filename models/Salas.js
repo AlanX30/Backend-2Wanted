@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
 
 const { Schema } = mongoose
 
@@ -25,14 +24,5 @@ const SalaSchema = new Schema({
     line123: { type: Number },
     line4: { type: Number }
 })
-
-SalaSchema.methods.encryptPassword = async password => {
-    const salt = await bcrypt.genSalt(10);
-    return await bcrypt.hash(password, salt);
-  };
-  
-  SalaSchema.methods.matchPassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
-  };
 
 module.exports = mongoose.model('Salas', SalaSchema)
