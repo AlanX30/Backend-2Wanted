@@ -11,6 +11,7 @@ const BalanceUserSchema = new Schema({
     depositBtc: {type: Boolean},
     withdraw: {type: Boolean},
     salaCreator: {type: String},
+    signatureId: {type: String},
     salaPrice:{type: Number},
     salaRepeat:{type: Number},
     accumulated: {type: Number},

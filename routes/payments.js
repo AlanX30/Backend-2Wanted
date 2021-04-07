@@ -26,7 +26,7 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
 
     const amountNumber = parseFloat(amount)
     console.log('Llego punto 2 envioBtc')
-    const user = await userModel.findById(req.userToken, { username: 1, wallet:1, idWallet: 1, password:1 })
+    const user = await userModel.findById(req.userToken, { userName: 1, wallet:1, idWallet: 1, password:1 })
 
     if(user.wallet < amountNumber){return res.json({error: 'you dont have enough money'})}
 
@@ -68,6 +68,25 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
 
         const signatureId = data.signatureId
         console.log('Llego punto 2 envioBtc', data)
+        
+        user.wallet = user.wallet - amountNumber
+
+        const newWithdraw = new balanceUserModel({ 
+          user: user.userName, 
+          type: 'withdrawBtc', 
+          withdraw: true,
+          signatureId: signatureId,
+          txId: txId,
+          toAddress: address,
+          withdrawAmount: amountNumber,  
+          wallet: user.wallet
+        })
+
+        await newWithdraw.save()
+        await user.save()
+
+        res.json({msg: 'BTC Sent'})
+        
         const options2 = {
           url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
           method: 'GET',
@@ -75,8 +94,10 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
               'x-api-key': apiKey
           }
         }
-      
-        request(options2, async function(err2, response2){
+
+        setTimeout(
+
+          request(options2, async function(err2, response2){
 
             if(err2){return res.json({error: 'Internal Error'})} 
 
@@ -87,24 +108,13 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
             }
             const txId = data2.txId
             console.log('Llego punto 3 envioBtc', data2)
-            
-            user.wallet = user.wallet - amountNumber
 
-            const newWithdraw = new balanceUserModel({ 
-              user: user.userName, 
-              type: 'withdrawBtc', 
-              withdraw: true,
-              txId: txId,
-              toAddress: address,
-              withdrawAmount: amountNumber,  
-              wallet: user.wallet
-            })
+            newWithdraw.txId = txId
 
             await newWithdraw.save()
-            await user.save()
-
-            res.json({msg: 'BTC Sent'})
-        })
+            
+        }),10000)
+      
     })
 
   }catch(error){
@@ -131,7 +141,8 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
       return res.json({error: 'Password is incorrect'})
     }
 
-    const userRecipient = await userModel.findOne({userName: username}, { userName: 1, idWallet: 1, wallet: 1 })
+    const userRecipient = await userModel.findOne({userName: username}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1 })
+
     const amountNumber = parseFloat(amount)
     console.log('Llego punto 2 envioUser')
     if(!userRecipient){ return res.json({error: 'The username does not exist'}) }
@@ -168,7 +179,14 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
         console.log('Llego punto 4 envioUser')
         user.wallet = user.wallet - amountNumber
 
-        userRecipient.wallet = userRecipient.wallet + amountNumber
+        let depositAmount = amountNumber
+
+        if(userRecipient.firstDeposit === true){ 
+          depositAmount = amountNumber - 0.00002 
+          userRecipient.firstDeposit = false
+        }
+
+        userRecipient.wallet = userRecipient.wallet + depositAmount
         console.log('Llego punto 5 envioUser')
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
@@ -186,9 +204,11 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
           reference: data.reference,
           fromUser: user.userName,
           wallet: userRecipient.wallet,
-          depositAmount: amountNumber,
+          depositAmount: depositAmount,
         })
 
+        await user.save()
+        await userRecipient.save()
         await newWithdraw.save()
         await newDeposit.save()
 
@@ -236,6 +256,8 @@ router.post('/api/notificationbtc', async(req, res) => {
     console.log('Llego punto 3 deposito')     
     await user.save()
     await newBalance.save()
+
+    res.status(200).json({msg: 'OK'})
 
   }catch(error){
     console.log(error)
