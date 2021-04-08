@@ -76,7 +76,6 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
           type: 'withdrawBtc', 
           withdraw: true,
           signatureId: signatureId,
-          txId: txId,
           toAddress: address,
           withdrawAmount: amountNumber,  
           wallet: user.wallet
@@ -86,34 +85,6 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
         await user.save()
 
         res.json({msg: 'BTC Sent'})
-        
-        const options2 = {
-          url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
-          method: 'GET',
-          headers: {
-              'x-api-key': apiKey
-          }
-        }
-
-        setTimeout(
-
-          request(options2, async function(err2, response2){
-
-            if(err2){return res.json({error: 'Internal Error'})} 
-
-            const data2 = JSON.parse(response2.body)
-    
-            if(data2.statusCode && data2.statusCode >= 400){ 
-              return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
-            }
-            const txId = data2.txId
-            console.log('Llego punto 3 envioBtc', data2)
-
-            newWithdraw.txId = txId
-
-            await newWithdraw.save()
-            
-        }),10000)
       
     })
 
