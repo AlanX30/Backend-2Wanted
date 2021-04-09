@@ -232,6 +232,29 @@ router.post('/api/logout', csrfProtection, verifyToken, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
+router.post('/api/autologout', csrfProtection, async(req, res) => {
+
+    try{
+
+        const { username } = req.body
+        
+        const user = await userModel.findOne({userName: username}, {accessToken: 1})
+
+        user.accessToken = ''
+
+        await user.save()
+
+        res.json({msg: 'Cleared cookie'})
+
+    }catch(error){
+        console.log(error)
+        res.json({error: 'Internal error'}
+    )}
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
 router.post('/api/me', csrfProtection, verifyToken, async(req, res) => {
 
     try{

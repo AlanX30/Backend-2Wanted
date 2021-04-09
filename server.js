@@ -2,6 +2,7 @@ const express = require('express')
 const http = require('http')
 const socket = require('./socket')
 const app = express()
+const server = http.createServer(app)
 const bodyParser = require('body-parser' )
 const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
@@ -18,7 +19,6 @@ const limiter = rateLimit({
 
 ///* ------------Socket init--------------------------------- */
 
-const server = http.createServer(app)
 socket.connect(server)
 
 ///* ------------Middlewares--------------------------------- */
