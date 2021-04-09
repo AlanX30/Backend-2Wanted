@@ -31,7 +31,7 @@ router.post('/api/admin/signin', csrfProtection, async(req, res) => {
 
         if(!validId){ return res.json({auth: false, error: 'Id is incorrect'}) }
 
-        
+        console.log(process.env.ADMINPASSWORDD, process.env.ALGO)
         const validPassword = await bcrypt.compare(password, process.env.ADMINPASSWORDD)
         console.log(password, process.env.ADMINPASSWORDD, validPassword)
 
