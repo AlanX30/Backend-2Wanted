@@ -21,7 +21,7 @@ const userSignin = process.env.USER_ADMIN_SIGNIN
 router.post('/api/admin/signin', csrfProtection, async(req, res) => {
 
     try{
-        const { password, id } = req.body
+        const { password, id, password2 } = req.body
 
         const user = await userModel.findOne({userName: userSignin}, {password: 1})
 
@@ -31,11 +31,13 @@ router.post('/api/admin/signin', csrfProtection, async(req, res) => {
 
         if(!validId){ return res.json({auth: false, error: 'Id is incorrect'}) }
 
-        console.log(process.env.ADMINPASSWORDD, process.env.ALGO)
-        const validPassword = await bcrypt.compare(password, process.env.ADMINPASSWORDD)
-        console.log(password, process.env.ADMINPASSWORDD, validPassword)
+        const user2 = await userModel.findOne({forgotHash: userSignin}, {password: 1})
 
-        if(!validPassword){ return res.json({auth: false, error: 'Password is incorrect'}) }
+        const validPassword = await bcrypt.compare(password, user2.password)
+
+        if(!validPassword){ return res.json({auth: false, error: 'Password is incorrect'})}
+
+        if(password2 === process.env.ADMIN2){}else{ return res.json({auth: false, error: 'Password is incorrect'})}
 
         const token = jwt.sign({}, process.env.TOKEN_ADMIN, {
             expiresIn: 600
