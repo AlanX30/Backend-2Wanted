@@ -15,7 +15,6 @@ const signatureId = process.env.SIGNATURE_ID
 const apiKey= process.env.BTCAPIKEY
 
 /* ------------------------------------------------------------------------------------------------------- */
-
 router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
   try{
 
