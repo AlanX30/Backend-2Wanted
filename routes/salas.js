@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const safe = require('safe-regex')
+const request = require('request')
 const csrf = require('csurf')
 const salasModel = require('../models/Salas')
 const verifyToken = require('../Middlewares/verifyToken')
@@ -11,6 +12,7 @@ const balanceUserModel = require('../models/BalanceUser')
 const reg_whiteSpace = /^$|\s+/
 
 const myIdWallet = process.env.ID_MYWALLET
+const apiKey= process.env.BTCAPIKEY
 
 const csrfProtection = csrf({ 
     cookie: true 
@@ -96,29 +98,29 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
             }
 
-        })
-    
-        user.wallet = user.wallet - priceNumber
+            user.wallet = user.wallet - priceNumber
 
-        const balanceSala = await new balanceUserModel({ 
-            user: user.userName,
-            salaName: newSala.name,
-            salaId: newSala._id,
-            salaActive: true,
-            salaCreator: creator,
-            salaRepeat: 0,
-            salaPrice: priceNumber,
-            accumulated: 0,
-            usersNumber: 0,
-            type: 'buy',
-            wallet: user.wallet,
-        })
-    
-        await user.save()
-        await newSala.save()
-        await balanceSala.save()
+            const balanceSala = await new balanceUserModel({ 
+                user: user.userName,
+                salaName: newSala.name,
+                salaId: newSala._id,
+                salaActive: true,
+                salaCreator: creator,
+                salaRepeat: 0,
+                salaPrice: priceNumber,
+                accumulated: 0,
+                usersNumber: 0,
+                type: 'buy',
+                wallet: user.wallet,
+            })
+        
+            await user.save()
+            await newSala.save()
+            await balanceSala.save()
 
-        res.json({msg: 'Correctly created room', id: newSala._id})
+            res.json({msg: 'Correctly created room', id: newSala._id})
+
+        })
 
     }catch(error){
         console.log(error)
