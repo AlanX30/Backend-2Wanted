@@ -43,7 +43,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
     
         const egresoUsers = await balanceUserModel.aggregate([{$match: {type : 'withdrawBtc'}}, {$group: {
             _id: null,
-            suma: {$sum: '$withdrawAmount'}
+            suma: {$sum: '$totalAmount'}
         }}])
     
         let totalEgreso2wanted = 0

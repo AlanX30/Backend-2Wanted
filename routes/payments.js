@@ -19,12 +19,12 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
   try{
 
     const { address, amount, password } = req.body
-    console.log('Llego punto 1 envioBtc')
+ 
     if(address.length > 60){ return res.json({error: 'Invalid address'})}
     if(amount.length > 16){ return res.json({error: 'Invalid amount'})}
 
     const amountNumber = parseFloat(amount)
-    console.log('Llego punto 2 envioBtc')
+ 
     const user = await userModel.findById(req.userToken, { userName: 1, wallet:1, idWallet: 1, password:1 })
 
     if(user.wallet < amountNumber){return res.json({error: 'you dont have enough money'})}
@@ -66,7 +66,6 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
         }
 
         const signatureId = data.signatureId
-        console.log('Llego punto 2 envioBtc', data)
         
         user.wallet = user.wallet - amountNumber
 
@@ -76,7 +75,9 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
           withdraw: true,
           signatureId: signatureId,
           toAddress: address,
-          withdrawAmount: amountNumber,  
+          totalAmount: amountNumber,
+          withdrawAmount: amountWithFee,  
+          fee: parseFloat(fee),  
           wallet: user.wallet
         })
         
