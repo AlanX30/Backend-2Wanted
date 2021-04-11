@@ -202,7 +202,8 @@ router.post('/api/notificationbtc', async(req, res) => {
     const { accountId, txId, amount } = req.body
 
     const repited = await balanceUserModel.findOne({txId: txId}, {txId: 1})
-    if(repited){ return }
+    
+    if(repited){ return res.status(200).json({msg: 'OK'}) }
 
     const user = await userModel.findOne({idWallet: accountId}, { wallet: 1, userName: 1, firstDeposit: 1 })
 
