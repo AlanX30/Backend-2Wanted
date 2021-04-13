@@ -32,7 +32,9 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
     
         let totalDeposits = 0
         
-        if(sumaDeposits.length > 0){ totalDeposits = sumaDeposits[0].suma }
+        if(sumaDeposits.length > 0){ 
+            totalDeposits = sumaDeposits[0].suma.toFixed(8)
+        }
     
         /* ---------------------------------------------------------------------------------------------------------------- */
     
