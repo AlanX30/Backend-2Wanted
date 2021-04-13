@@ -104,7 +104,9 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let verification
 
         if(actual === actualEnCuenta){verification = 'En orden'}else{verification = 'Inconsistencia'}
-
+        console.log({
+            actual, actualEnCuenta, actual2wanted, userMoneyRooms, totalInWallets
+        })
         res.json({totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification})
 
     }catch(error){
