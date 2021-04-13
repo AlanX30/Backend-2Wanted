@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
+const Decimal = require('decimal.js-light')
 const balanceUserModel = require('../models/BalanceUser')
 const request = require('request')
 const csrf = require('csurf')
@@ -53,8 +54,10 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
     
         if(egreso2wanted.length > 0){ totalEgreso2wanted = egreso2wanted[0].suma }
         if(egresoUsers.length > 0){ totalEgresoUsers = egresoUsers[0].suma }
+
+        const egresos = new Decimal(totalEgreso2wanted).add(totalEgresoUsers).toNumber()
     
-        const actualEnCuenta = totalDeposits - (totalEgreso2wanted + totalEgresoUsers)
+        const actualEnCuenta = new Decimal(totalDeposits).sub(egresos).toNumber()
     
         /* ---------------------------------------------------------------------------------------------------------------- */
     
@@ -65,26 +68,36 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let totalPaidUsers = 0
         
         for(let i = 0; i < balance.length; i++){
+
+            let balanceSala = new Decimal(balance[i].price).mul(balance[i].usersNumber).toNumber()
     
-            totalDepositSala = totalDepositSala + (balance[i].price * balance[i].usersNumber)
+            totalDepositSala = new Decimal(totalDepositSala).add(balanceSala).toNumber()
                 
-            totalPaidUsers = totalPaidUsers + balance[i].paidUsers
+            totalPaidUsers = new Decimal(totalPaidUsers).add(balance[i].paidUsers).toNumber()
         
-            let line123 = balance[i].price * balance[i].line123
-            let line4 = (balance[i].price / 2) * balance[i].line4
-            let nextLines = (balance[i].price / 4) * (balance[i].usersNumber - balance[i].line123 - balance[i].line4)
+            let line123 = new Decimal(balance[i].price).mul(balance[i].line123).toNumber()
+
+            let divide1 = new Decimal(balance[i].price).div(2).toNumber()
+            let divide2 = new Decimal(balance[i].price).div(4).toNumber()
+
+            let line4 = new Decimal(divide1).mul(balance[i].line4).toNumber()
+
+            let nextLinesUsers = new Decimal(balance[i].usersNumber).sub(balance[i].line123).sub(balance[i].line4).toNumber()
+
+            let nextLines = new Decimal(divide2).mul(nextLinesUsers).toNumber()
+            
+            let total = new Decimal(line123).add(line4).add(nextLines).toNumber()
     
-            let total = line123 + line4 + nextLines
-    
-            totalWon = totalWon + total
+            totalWon = new Decimal(totalWon).add(total).toNumber()
 
             ActualtotalWon = totalWon
           
         }
     
         /* ---------------------------------------------------------------------------------------------------------------- */
-            
-        const userMoneyRooms = totalDepositSala - (totalPaidUsers + totalWon)
+        
+        const pagadoSala = new Decimal(totalPaidUsers).add(totalWon).toNumber() 
+        const userMoneyRooms = new Decimal(totalDepositSala).sub(pagadoSala).toNumber()
             
         /* ---------------------------------------------------------------------------------------------------------------- */
             
@@ -99,9 +112,9 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
     
         /* ---------------------------------------------------------------------------------------------------------------- */
         
-        actual2wanted = totalWon - totalEgreso2wanted
+        actual2wanted = new Decimal(totalWon).sub(totalEgreso2wanted).toNumber()
 
-        const actual = actual2wanted + userMoneyRooms + totalInWallets
+        const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).toNumber()
 
         let verification
 

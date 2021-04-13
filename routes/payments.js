@@ -242,7 +242,9 @@ router.post('/api/notificationbtc', async(req, res) => {
 router.post('/api/tatumaccount', async(req, res) => {
   try{
 
-    const { id } = req.body
+    const r = new Decimal(10).sub(3).sub(1).toNumber()
+    res.status(200).json({r})
+    /* const { id } = req.body
 
     const options = {
       url: `https://api-eu1.tatum.io/v3/ledger/account/${id}`,
@@ -263,7 +265,7 @@ router.post('/api/tatumaccount', async(req, res) => {
         }
 
         res.json(data)
-    })
+    }) */
 
   }catch(error){
     console.log(error)
