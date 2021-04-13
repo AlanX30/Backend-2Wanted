@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const safe = require('safe-regex')
 const request = require('request')
+const Decimal = require('decimal.js-light')
 const csrf = require('csurf')
 const salasModel = require('../models/Salas')
 const verifyToken = require('../Middlewares/verifyToken')
@@ -98,7 +99,7 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
             }
 
-            user.wallet = user.wallet - priceNumber
+            user.wallet = new Decimal(user.wallet).sub(priceNumber).toNumber()
 
             const balanceSala = await new balanceUserModel({ 
                 user: user.userName,
@@ -282,7 +283,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
 
         price.usersNumber = price.usersNumber + 1
 
-        price.accumulated = price.accumulated + price.price
+        price.accumulated = new Decimal(price.accumulated).add(price.price).toNumber()
 
         const options = {
             url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
@@ -310,32 +311,31 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
             }
 
+            user.wallet = new Decimal(user.wallet).sub(price.price).toNumber()
+            
+            const balanceSala = await new balanceUserModel({ 
+                user: user.userName,
+                salaName: price.name,
+                salaId: salaId,
+                salaCreator: price.creator,
+                salaActive: true,
+                salaRepeat: countRepeated,
+                accumulated: 0,
+                type: 'buy',
+                wallet: user.wallet,
+                salaPrice: price.price,
+            })
+            
+            positions(req)
+            
+            await user.save()
+            await parent.save()
+            await balanceSala.save()
+            await price.save()
+        
+            res.json({msg: 'User added successfully', id: salaId})
+
         })
-
-        user.wallet = user.wallet - price.price
-
-        await user.save()
-        await parent.save()
-
-        const balanceSala = await new balanceUserModel({ 
-            user: user.userName,
-            salaName: price.name,
-            salaId: salaId,
-            salaCreator: price.creator,
-            salaActive: true,
-            salaRepeat: countRepeated,
-            accumulated: 0,
-            type: 'buy',
-            wallet: user.wallet,
-            salaPrice: price.price,
-        })
-
-        positions(req)
-
-        await balanceSala.save()
-        await price.save()
-    
-        res.json({msg: 'User added successfully', id: salaId})
         
     }catch(error){
         console.log(error)

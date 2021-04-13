@@ -3,6 +3,7 @@ const router = express.Router()
 const request = require('request')
 const userModel = require('../models/Users')
 const verifyToken = require('../Middlewares/verifyToken')
+const Decimal = require('decimal.js-light')
 const balanceUserModel = require('../models/BalanceUser')
 const csrf = require('csurf')
 
@@ -36,7 +37,7 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
     }
 
     const fee = '0.00004'
-    const amountWithFee = parseFloat(amount) - parseFloat(fee)
+    const amountWithFee = new Decimal(parseFloat(amount)).sub(parseFloat(fee)).toNumber()
 
     const options = {
       url: 'https://api-eu1.tatum.io/v3/offchain/bitcoin/transfer',
@@ -67,7 +68,7 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
 
         const signatureId = data.signatureId
         
-        user.wallet = user.wallet - amountNumber
+        user.wallet = new Decimal(user.wallet).sub(amountNumber).toNumber()
 
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
@@ -148,16 +149,16 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
 
       if(data.reference){
 
-        user.wallet = user.wallet - amountNumber
+        user.wallet = new Decimal(user.wallet).sub(amountNumber).toNumber()
 
         let depositAmount = amountNumber
 
         if(userRecipient.firstDeposit === true){ 
-          depositAmount = amountNumber - 0.00002 
+          depositAmount = new Decimal(amountNumber).sub(0.00002).toNumber()
           userRecipient.firstDeposit = false
         }
 
-        userRecipient.wallet = userRecipient.wallet + depositAmount
+        userRecipient.wallet = new Decimal(userRecipient.wallet).add(depositAmount).toNumber()
 
         const newWithdraw = new balanceUserModel({ 
           user: user.userName, 
@@ -210,11 +211,11 @@ router.post('/api/notificationbtc', async(req, res) => {
     let depositAmount = parseFloat(amount)
 
     if(user.firstDeposit === true){ 
-      depositAmount = depositAmount - 0.00002 
+      depositAmount = new Decimal(depositAmount).sub(0.00002).toNumber()
       user.firstDeposit = false
     }
 
-    user.wallet = user.wallet + depositAmount
+    user.wallet = new Decimal(user.wallet).add(depositAmount).toNumber()
     
     const newBalance = await new balanceUserModel({ 
       user: user.userName,

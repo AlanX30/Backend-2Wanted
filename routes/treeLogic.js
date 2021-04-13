@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const csrf = require('csurf')
 const salasModel = require('../models/Salas')
+const Decimal = require('decimal.js-light')
 const userModel = require('../models/Users')
 const balanceUserModel = require('../models/BalanceUser')
 const verifyToken = require('../Middlewares/verifyToken')
@@ -161,27 +162,27 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
         let acum4 = 0   
         
         for(let i = 6; i<=13; i++) {
-            let divide = salaPrice.price/2   
+            let divide = new Decimal(salaPrice.price).div(2).toNumber()  
             if(allData[i]){
-                acum3 = acum3 + divide
+                acum3 = new Decimal(acum3).add(divide).toNumber()
             }
         }
         
         for(let i = 14; i<=29; i++){
-            let divide = salaPrice.price/4  
+            let divide = new Decimal(salaPrice.price).div(4).toNumber() 
             if(allData[i]){
-                acum4 = acum4 + divide
+                acum4 = acum3 = new Decimal(acum4).add(divide).toNumber()
             }
         }
         
-        const tAcum = acum3 + acum4
+        const tAcum = new Decimal(acum3).add(acum4).toNumber()
         let newCash = 0 
 
         if(tAcum > balanceSala.accumulated){
-            newCash = tAcum - balanceSala.accumulated
+            newCash = new Decimal(tAcum).sub(balanceSala.accumulated).toNumber()
         }
 
-        const full = salaPrice.price * 8
+        const full = new Decimal(salaPrice.price).mul(8).toNumber()
         
         if(newCash > 0){
 
@@ -222,8 +223,8 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
     
             })
             
-            user.wallet = user.wallet + newCash
-            salaPrice.paidUsers = salaPrice.paidUsers + newCash
+            user.wallet = new Decimal(user.wallet).add(newCash).toNumber()
+            salaPrice.paidUsers = new Decimal(salaPrice.paidUsers).add(newCash).toNumber()
 
             const newBalance = await new balanceUserModel({ 
                 user: userRoot,
