@@ -33,7 +33,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let totalDeposits = 0
         
         if(sumaDeposits.length > 0){ 
-            totalDeposits = sumaDeposits[0].suma.toFixed(8)
+            totalDeposits = sumaDeposits[0].suma
         }
     
         /* ---------------------------------------------------------------------------------------------------------------- */
@@ -107,7 +107,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
 
         if(actual === actualEnCuenta){verification = 'En orden'}else{verification = 'Inconsistencia'}
         console.log({
-            actual, actualEnCuenta, actual2wanted, userMoneyRooms, totalInWallets
+            totalDeposits, totalEgreso2wanted, totalEgresoUsers
         })
         res.json({totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification})
 
