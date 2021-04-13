@@ -56,7 +56,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         if(egresoUsers.length > 0){ totalEgresoUsers = egresoUsers[0].suma }
 
         const egresos = new Decimal(totalEgreso2wanted).add(totalEgresoUsers).toNumber()
-    
+        
         const actualEnCuenta = new Decimal(totalDeposits).sub(egresos).toNumber()
     
         /* ---------------------------------------------------------------------------------------------------------------- */
@@ -119,10 +119,8 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let verification
 
         if(actual === actualEnCuenta){verification = 'Balanceado'}else{verification = 'Desbalance'}
-        console.log({
-            totalDeposits, totalEgreso2wanted, totalEgresoUsers
-        })
-        res.json({totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification})
+
+        res.json({egresos, totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification, verification2: actual})
 
     }catch(error){
         console.log(error)
