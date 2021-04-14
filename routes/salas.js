@@ -258,11 +258,11 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         }
 
         if(parent.users[0].childsId.childId1 === ''){
-            parent.users[0].childsId.childId1 = user.userName
+            parent.users[0].childsId.childId1 = `${user.userName} ${countRepeated}` 
         }else if (parent.users[0].childsId.childId2 === ''){
             parent.users[0].space = false
+            parent.users[0].childsId.childId2 = `${user.userName} ${countRepeated}` 
             await parent.save()
-            parent.users[0].childsId.childId2 = user.userName
         }else{return res.json({error: 'The parent user is full'})}
     
         await salasModel.updateOne({_id: salaId}, {
