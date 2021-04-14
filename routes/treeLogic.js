@@ -172,7 +172,7 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
             let divide = new Decimal(salaPrice.price).div(4).toNumber() 
             if(allData[i]){
                 console.log('llega al for de la ultima linea')
-                acum4 = acum3 = new Decimal(acum4).add(divide).toNumber()
+                acum4 = new Decimal(acum4).add(divide).toNumber()
             }
         }
         console.log('llega punto 3')
