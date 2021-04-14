@@ -243,7 +243,8 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
             
             console.log('llega punto 7 Final')
             res.json({msg: 'Correct transaction'})
-        }
+        }else{ return res.json({error: 'No money to pay'})}
+
     }else{
         res.json(allData)
     }
