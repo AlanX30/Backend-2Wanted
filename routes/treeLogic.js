@@ -157,7 +157,7 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
         const balanceSala = await balanceUserModel.findOne({salaName: salaPrice.name, user: userRoot, salaRepeat: parent1.users[0].repeated}, {salaPrice: 1, accumulated: 1})
         .sort({date: -1})
         const user = await userModel.findOne({userName: userRoot}, { wallet: 1 })
-        
+        console.log('llega punto 1')
         let acum3 = 0
         let acum4 = 0   
         
@@ -167,17 +167,18 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
                 acum3 = new Decimal(acum3).add(divide).toNumber()
             }
         }
-        
+        console.log('llega punto 2')
         for(let i = 14; i<=29; i++){
             let divide = new Decimal(salaPrice.price).div(4).toNumber() 
             if(allData[i]){
+                console.log('llega al for de la ultima linea')
                 acum4 = acum3 = new Decimal(acum4).add(divide).toNumber()
             }
         }
-        
+        console.log('llega punto 3')
         const tAcum = new Decimal(acum3).add(acum4).toNumber()
         let newCash = 0 
-
+        console.log('llega punto 4', newCash, tAcum)
         if(tAcum > balanceSala.accumulated){
             newCash = new Decimal(tAcum).sub(balanceSala.accumulated).toNumber()
         }
@@ -222,7 +223,7 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
                 }
     
             }) */
-            
+            console.log('llega punto 5')
             user.wallet = new Decimal(user.wallet).add(newCash).toNumber()
             salaPrice.paidUsers = new Decimal(salaPrice.paidUsers).add(newCash).toNumber()
 
@@ -235,11 +236,12 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
                 type: 'won',
                 wallet: user.wallet,
             })
-
+            console.log('llega punto 6')
             await salaPrice.save()
             await user.save()
             await newBalance.save()
             
+            console.log('llega punto 7 Final')
             res.json({msg: 'Correct transaction'})
         }
     }else{
