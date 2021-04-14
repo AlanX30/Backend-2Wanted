@@ -239,7 +239,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         } 
         
         const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1, creator: 1})
-        const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: parentUser }}})    
+        const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }}})    
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
 
         let countRepeated = 0
