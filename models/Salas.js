@@ -13,6 +13,7 @@ const SalaSchema = new Schema({
            },
            parentId: {type: String},
            active: {type: Boolean, default: true},
+           last: {type: Boolean, default: true},
            repeated: { type: Number, default: 0}
         }
     ],

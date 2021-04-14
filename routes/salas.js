@@ -240,14 +240,17 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         
         const price = await salasModel.findById(salaId, {usersNumber: 1, price: 1, name: 1, creator: 1})
         const parent = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }}})    
-        const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { user: user.userName }}})
-
+        const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: user.userName}, {last: true} ] }}})
+        console.log(repitedUser.users[0])
         let countRepeated = 0
 
         if(repitedUser.users.length > 0){
             if(repitedUser.users[0].active === true) {
                 return res.json({error: 'You are currently active in this room, you can re-enter when completing it'})
-            }else if(repitedUser.users[0].active === false){ countRepeated = repitedUser.users[0].repeated + 1 }
+            }else if(repitedUser.users[0].active === false){
+                countRepeated = repitedUser.users[0].repeated + 1
+                repitedUser.users[0].last = false
+            }
         }
         
         if(user.wallet < price.price){
@@ -276,6 +279,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
                         childId2: ''
                     },
                     active: true,
+                    last: true,
                     repeated: countRepeated
                 }
             }
@@ -326,6 +330,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             
             positions(req)
             
+            await repitedUser.save()
             await user.save()
             await parent.save()
             await balanceSala.save()
