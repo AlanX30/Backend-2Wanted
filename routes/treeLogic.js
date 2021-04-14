@@ -143,10 +143,10 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
     
     
     const allData = [
-        child2_1.split(" ")[0],child2_2.split(" ")[0],
-        child3_1.split(" ")[0],child3_2.split(" ")[0],child3_3.split(" ")[0],child3_4.split(" ")[0],
-        child4_1.split(" ")[0],child4_2.split(" ")[0],child4_3.split(" ")[0],child4_4.split(" ")[0],child4_5.split(" ")[0],child4_6.split(" ")[0],child4_7.split(" ")[0],child4_8.split(" ")[0],
-        child5_1.split(" ")[0],child5_2.split(" ")[0],child5_3.split(" ")[0],child5_4.split(" ")[0],child5_5.split(" ")[0],child5_6.split(" ")[0],child5_7.split(" ")[0],child5_8.split(" ")[0],child5_9.split(" ")[0],child5_10.split(" ")[0],child5_11.split(" ")[0],child5_12.split(" ")[0],child5_13.split(" ")[0],child5_14.split(" ")[0],child5_15.split(" ")[0],child5_16.split(" ")[0]
+        child2_1,child2_2,
+        child3_1,child3_2,child3_3,child3_4,
+        child4_1,child4_2,child4_3,child4_4,child4_5,child4_6,child4_7,child4_8,
+        child5_1,child5_2,child5_3,child5_4,child5_5,child5_6,child5_7,child5_8,child5_9,child5_10,child5_11,child5_12,child5_13,child5_14,child5_15,child5_16
     ]
     
     if(toBalance === 'true'){
