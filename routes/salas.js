@@ -283,8 +283,6 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
 
         price.usersNumber = price.usersNumber + 1
 
-        price.accumulated = new Decimal(price.accumulated).add(price.price).toNumber()
-
         /* const options = {
             url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
             method: 'POST',
