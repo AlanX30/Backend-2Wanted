@@ -285,7 +285,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
 
         price.accumulated = new Decimal(price.accumulated).add(price.price).toNumber()
 
-        const options = {
+        /* const options = {
             url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
             method: 'POST',
             body: JSON.stringify({
@@ -309,7 +309,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
       
             if(data.statusCode && data.statusCode >= 400){ 
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-            }
+            } */
 
             user.wallet = new Decimal(user.wallet).sub(price.price).toNumber()
             
@@ -335,7 +335,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         
             res.json({msg: 'User added successfully', id: salaId})
 
-        })
+        /* }) */
         
     }catch(error){
         console.log(error)
