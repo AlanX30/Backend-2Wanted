@@ -245,12 +245,13 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         let countRepeated = 0
 
         if(repitedUser){
-            console.log('Llega aqui')
+            console.log('Llega aqui', repitedUser)
             if(repitedUser.users.length > 0){
                 if(repitedUser.users[0].active === true) {
                     return res.json({error: 'You are currently active in this room, you can re-enter when completing it'})
                 }else if(repitedUser.users[0].active === false){
                     countRepeated = repitedUser.users[0].repeated + 1
+                    console.log('Llega aqui 2')
                     repitedUser.users[0].last = false
                 }
             }
