@@ -243,17 +243,15 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         const repitedUser = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: user.userName}, {last: true} ] }}})
 
         let countRepeated = 0
+        let last = false
 
-        if(repitedUser){
-            console.log('Llega aqui', repitedUser)
-            if(repitedUser.users.length > 0){
-                if(repitedUser.users[0].active === true) {
-                    return res.json({error: 'You are currently active in this room, you can re-enter when completing it'})
-                }else if(repitedUser.users[0].active === false){
-                    countRepeated = repitedUser.users[0].repeated + 1
-                    console.log('Llega aqui 2')
-                    repitedUser.users[0].last = false
-                }
+        console.log('Llega aqui', repitedUser)
+        if(repitedUser.users.length > 0){
+            if(repitedUser.users[0].active === true) {
+                return res.json({error: 'You are currently active in this room, you can re-enter when completing it'})
+            }else if(repitedUser.users[0].active === false){
+                countRepeated = repitedUser.users[0].repeated + 1
+                last = true
             }
         }
         
@@ -264,14 +262,24 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             return res.json({error: 'There is no parent user in this room'})
         }
 
-        if(parent.users[0].childsId.childId1 === ''){
-            parent.users[0].childsId.childId1 = `${user.userName} ${countRepeated}` 
-        }else if (parent.users[0].childsId.childId2 === ''){
-            parent.users[0].space = false
+        let child1 = false
+        let child2 = false
 
-            parent.users[0].childsId.childId2 = `${user.userName} ${countRepeated}` 
+        if(parent.users[0].childsId.childId1 === ''){
+
+            child1 = true
+/*             parent.users[0].childsId.childId1 = `${user.userName} ${countRepeated}`  */
+
+
+        }else if (parent.users[0].childsId.childId2 === ''){
+
+            child2 = true
+/*          parent.users[0].space = false
+            parent.users[0].childsId.childId2 = `${user.userName} ${countRepeated}`  */
+
+
         }else{return res.json({error: 'The parent user is full'})}
-    
+        
         await salasModel.updateOne({_id: salaId}, {
             $push: {
                 'users': {
@@ -287,7 +295,27 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
                     repeated: countRepeated
                 }
             }
-        }) 
+        })
+
+        if(last === true){
+            await salasModel.updateOne({_id: salaId, 'users.user': user.userName, 'users.repeated': repitedUser.users[0].repeated}, {
+                $set: { 'users.$.last': false }
+            }) 
+        }
+        
+        if(child1 === true){
+            await salasModel.updateOne({_id: salaId, 'users.user': parentUser, 'users.active': true}, {
+                $set: { 'users.$.childsId.childId1': `${user.userName} ${countRepeated}` }
+            }) 
+        }
+        if(child2 === true){
+            await salasModel.updateOne({_id: salaId, 'users.user': parentUser, 'users.active': true}, {
+                $set: { 
+                    'users.$.childsId.childId2': `${user.userName} ${countRepeated}`,
+                    'users.$.space': false
+                }
+            }) 
+        }
 
         price.usersNumber = price.usersNumber + 1
 
