@@ -266,7 +266,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             parent.users[0].childsId.childId1 = `${user.userName} ${countRepeated}` 
         }else if (parent.users[0].childsId.childId2 === ''){
             parent.users[0].space = false
-            await parent.save()
+
             parent.users[0].childsId.childId2 = `${user.userName} ${countRepeated}` 
         }else{return res.json({error: 'The parent user is full'})}
     
