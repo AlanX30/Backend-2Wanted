@@ -304,4 +304,36 @@ router.post('/api/DELETECC', async(req, res) => {
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/DELETECC2', async(req, res) => {
+  try{
+
+    const { id } = req.body
+
+    const options = {
+      url: `https://api-eu1.tatum.io/v3/kms/${id}?revert=true`,
+      method: 'DELETE',
+      headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+      }
+    }
+
+    request(options,function(err, response){
+
+        if (err) res.json(err)
+
+        res.json(response)
+    })
+
+    
+
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
 module.exports = router
