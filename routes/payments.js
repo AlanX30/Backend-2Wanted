@@ -306,13 +306,13 @@ router.post('/api/DELETECC', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/DELETECC2', async(req, res) => {
+router.post('/api/transactiondetail', async(req, res) => {
   try{
 
     const { id } = req.body
 
     const options = {
-      url: `https://api-eu1.tatum.io/v3/offchain/withdrawal?currency=BTC&status=Done&pageSize=10&offset=0`,
+      url: `https://api-eu1.tatum.io/v3/kms/${id}`,
       method: 'GET',
       headers: {
           'x-api-key': apiKey,
