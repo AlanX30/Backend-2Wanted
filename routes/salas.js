@@ -279,6 +279,29 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
 
 
         }else{return res.json({error: 'The parent user is full'})}
+
+        if(last === true){
+            await salasModel.updateOne({_id: salaId, 'users.user': user.userName, 'users.repeated': repitedUser.users[0].repeated}, {
+                $set: { 'users.$.last': false }
+            }) 
+        }
+        
+        if(child1 === true){
+            await salasModel.updateOne({_id: salaId, 'users.user': parentUser, 'users.active': true}, {
+                $set: { 'users.$.childsId.childId1': `${user.userName} ${countRepeated}` }
+            }) 
+        }
+        console.log(child2)
+        if(child2 === true){
+            const algo = await salasModel.updateOne({_id: salaId, 'users.user': parentUser, 'users.active': true}, {
+                $set: { 
+                    'users.$.childsId.childId2': `${user.userName} ${countRepeated}`/* ,
+                    'users.$.space': false */
+                }
+            }) 
+            console.log('LLego a child2', algo)
+            if(algo.nModified <= 0){ return res.json({error: 'Todavia no agrega'})}
+        }
         
         await salasModel.updateOne({_id: salaId}, {
             $push: {
