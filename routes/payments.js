@@ -243,11 +243,7 @@ router.post('/api/notificationbtc', async(req, res) => {
 router.post('/api/tatumaccount', async(req, res) => {
   try{
 
-    const algo = await salasModel.updateOne({_id: '604bdc32c6e87a1edc6579f4', 'users.user': '@prueba1', 'users.active': true}, {
-      $set: { 'users.$.childsId.childId1': '@otroPerro'}
-  }) 
-  res.json(algo)
-    /* const { id } = req.body
+    const { id } = req.body
 
     const options = {
       url: `https://api-eu1.tatum.io/v3/ledger/account/${id}`,
@@ -268,7 +264,7 @@ router.post('/api/tatumaccount', async(req, res) => {
         }
 
         res.json(data)
-    }) */
+    })
 
   }catch(error){
     console.log(error)
@@ -278,7 +274,7 @@ router.post('/api/tatumaccount', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/DELETECC', csrfProtection, async(req, res) => {
+router.post('/api/DELETECC', async(req, res) => {
   try{
 
     const { id } = req.body
