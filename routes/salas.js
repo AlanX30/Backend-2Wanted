@@ -272,7 +272,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
 
 
         }else if (parent.users[0].childsId.childId2 === ''){
-
+            console.log(parent.users[0].childsId)
             child2 = true
 /*          parent.users[0].space = false
             parent.users[0].childsId.childId2 = `${user.userName} ${countRepeated}`  */
