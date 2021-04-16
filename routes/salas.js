@@ -312,8 +312,8 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         if(child2 === true){
             const algo = await salasModel.updateOne({_id: salaId, 'users.user': parentUser, 'users.active': true}, {
                 $set: { 
-                    'users.$.childsId.childId2': `${user.userName} ${countRepeated}`,
-                    'users.$.space': false
+                    'users.$.childsId.childId2': `${user.userName} ${countRepeated}`/* ,
+                    'users.$.space': false */
                 }
             }) 
             console.log('LLego a child2', algo)
