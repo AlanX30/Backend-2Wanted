@@ -280,38 +280,6 @@ router.post('/api/DELETECC', async(req, res) => {
     const { id } = req.body
 
     const options = {
-      url: `https://api-eu1.tatum.io/v3/offchain/withdrawal/${id}?revert=true`,
-      method: 'DELETE',
-      headers: {
-          'x-api-key': apiKey,
-          'Content-Type': 'application/json'
-      }
-    }
-
-    request(options,function(err, response){
-
-        if (err) res.json(err)
-
-        res.json(response)
-    })
-
-    
-
-  }catch(error){
-    console.log(error)
-    res.json({error: 'Internal Error'})
-  }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------------- */
-
-router.post('/api/transactiondetail', async(req, res) => {
-  try{
-
-    const { id } = req.body
-
-    const options = {
       url: `https://api-eu1.tatum.io/v3/kms/${id}`,
       method: 'GET',
       headers: {
@@ -325,10 +293,58 @@ router.post('/api/transactiondetail', async(req, res) => {
         if (err) res.json(err)
 
         const data = JSON.parse(response.body)
+        const withdrawalId = data.withdrawalId
+        console.log(data)
+        
+        const options2 = {
+          url: `https://api-eu1.tatum.io/v3/offchain/withdrawal/${withdrawalId}?revert=true`,
+          method: 'DELETE',
+          headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json'
+          }
+        }
+    
+        request(options2 ,function(err, response2){
+    
+            if(err){ return res.json({error: 'Internal Error'}) }
 
-        res.json(data)
+            if(response2.statusCode < 300){ 
+
+              const deleteBalance = await balanceUserModel.findOneAndDelete({signatureId: id})
+              console.log(withdrawalId, deleteBalance)
+              if(!deleteBalance){ return res.json({error: 'Signature eliminado del balance'})}
+
+              const username = deleteBalance.user
+
+              const user = await userModel.findOne({userName: username}, {wallet: 1})
+
+              user.wallet = new Decimal(user.wallet).add(deleteBalance.totalAmount).toNumber()
+              console.log(user, 'llego al final')
+              await user.save()
+
+              return res.json({msg: 'Transaccion devuelta'}) 
+
+            }else{ return res.json({error: 'Internal Error'})}
+    
+        })
+
     })
 
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/transactiondetail', async(req, res) => {
+  try{
+
+    
+    
     
 
   }catch(error){
