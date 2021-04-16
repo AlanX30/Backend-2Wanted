@@ -324,7 +324,9 @@ router.post('/api/DELETECC2', async(req, res) => {
 
         if (err) res.json(err)
 
-        res.json(response)
+        const data = JSON.parse(response.body)
+
+        res.json(data)
     })
 
     
