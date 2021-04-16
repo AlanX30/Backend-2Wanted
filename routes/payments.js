@@ -288,7 +288,7 @@ router.post('/api/DELETECC', async(req, res) => {
       }
     }
 
-    request(options,function(err, response){
+    request(options, async function(err, response){
 
         if (err) res.json(err)
 
@@ -305,7 +305,7 @@ router.post('/api/DELETECC', async(req, res) => {
           }
         }
     
-        request(options2 ,function(err, response2){
+        request(options2 , async function(err, response2){
     
             if(err){ return res.json({error: 'Internal Error'}) }
 
