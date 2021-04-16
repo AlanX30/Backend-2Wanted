@@ -362,9 +362,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             
             positions(req)
             
-            await repitedUser.save()
             await user.save()
-            await parent.save()
             await balanceSala.save()
             await price.save()
         
