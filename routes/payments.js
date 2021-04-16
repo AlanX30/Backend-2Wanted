@@ -12,6 +12,7 @@ const csrfProtection = csrf({
   cookie: true 
 })
 
+const myIdWallet = process.env.ID_MYWALLET
 const xpub = process.env.XPUB
 const signatureId = process.env.SIGNATURE_ID
 const apiKey= process.env.BTCAPIKEY
@@ -294,7 +295,6 @@ router.post('/api/DELETECC', async(req, res) => {
 
         const data = JSON.parse(response.body)
         const withdrawalId = data.withdrawalId
-        console.log(data)
         
         const options2 = {
           url: `https://api-eu1.tatum.io/v3/offchain/withdrawal/${withdrawalId}?revert=true`,
@@ -312,7 +312,7 @@ router.post('/api/DELETECC', async(req, res) => {
             if(response2.statusCode < 300){ 
 
               const deleteBalance = await balanceUserModel.findOneAndDelete({signatureId: id})
-              console.log(withdrawalId, deleteBalance)
+
               if(!deleteBalance){ return res.json({error: 'Signature eliminado del balance'})}
 
               const username = deleteBalance.user
@@ -320,7 +320,7 @@ router.post('/api/DELETECC', async(req, res) => {
               const user = await userModel.findOne({userName: username}, {wallet: 1})
 
               user.wallet = new Decimal(user.wallet).add(deleteBalance.totalAmount).toNumber()
-              console.log(user, 'llego al final')
+
               await user.save()
 
               return res.json({msg: 'Transaccion devuelta'}) 
@@ -340,12 +340,47 @@ router.post('/api/DELETECC', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/transactiondetail', async(req, res) => {
+router.post('/api/tatumDetailUser', async(req, res) => {
   try{
 
-    
-    
-    
+    const { username, myWallet } = req.body
+
+    let id 
+
+    if(myWallet){
+
+      id = myIdWallet
+
+    }else{
+
+      const user = await userModel.findOne({userName: username}, {idWallet: 1})
+
+      id = user.idWallet
+
+    }
+
+    const options = {
+      url: `https://api-eu1.tatum.io/v3/ledger/account/${id}`,
+      method: 'GET',
+      headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+      }
+    }
+
+    request(options, async function(err, response){
+
+      if(err){return res.json({error: 'Internal error'})} 
+
+      const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
+
+      res.json(data.balance)
+
+    })
 
   }catch(error){
     console.log(error)
