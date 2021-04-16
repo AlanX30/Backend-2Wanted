@@ -312,8 +312,8 @@ router.post('/api/DELETECC2', async(req, res) => {
     const { id } = req.body
 
     const options = {
-      url: `https://api-eu1.tatum.io/v3/kms/${id}?revert=true`,
-      method: 'DELETE',
+      url: `https://api-eu1.tatum.io/v3/offchain/withdrawal?currency=BTC&status=Done&pageSize=10&offset=0`,
+      method: 'GET',
       headers: {
           'x-api-key': apiKey,
           'Content-Type': 'application/json'
