@@ -310,7 +310,7 @@ router.post('/api/tatumDetailUser', async(req, res) => {
   try{
 
     const { username, myWallet } = req.body
-    console.log(req.body)
+  
     let id 
 
     if(myWallet){
