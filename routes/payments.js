@@ -241,40 +241,6 @@ router.post('/api/notificationbtc', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/tatumaccount', async(req, res) => {
-  try{
-
-    const { id } = req.body
-
-    const options = {
-      url: `https://api-eu1.tatum.io/v3/ledger/account/${id}`,
-      method: 'GET',
-      headers: {
-          'x-api-key': apiKey,
-          'Content-Type': 'application/json'
-      }
-    }
-  
-    request(options, function(err, response){
-        if(err){return res.json({error: 'Internal error'})} 
-
-        const data = JSON.parse(response.body)
-
-        if(data.statusCode && data.statusCode >= 400){ 
-          return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-        }
-
-        res.json(data)
-    })
-
-  }catch(error){
-    console.log(error)
-    res.json({error: 'Internal error'})
-  }
-})
-
-/* ------------------------------------------------------------------------------------------------------- */
-
 router.post('/api/DELETECC', async(req, res) => {
   try{
 
@@ -354,6 +320,8 @@ router.post('/api/tatumDetailUser', async(req, res) => {
     }else{
 
       const user = await userModel.findOne({userName: username}, {idWallet: 1})
+
+      if(!user){ return res.json({error: 'No exite el usuario'}) }
 
       id = user.idWallet
 
