@@ -241,7 +241,7 @@ router.post('/api/notificationbtc', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/DELETECC', async(req, res) => {
+router.post('/api/cancelWithdraw', async(req, res) => {
   try{
 
     const { id } = req.body
@@ -347,6 +347,43 @@ router.post('/api/tatumDetailUser', async(req, res) => {
       }
 
       res.json(data.balance)
+
+    })
+
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/transactiondetail', async(req, res) => {
+  try{
+
+    const { id } = req.body
+
+    const options = {
+      url: `https://api-eu1.tatum.io/v3/kms/${id}`,
+      method: 'GET',
+      headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+      }
+    }
+
+    request(options, async function(err, response){
+
+      if(err){return res.json({error: 'Internal error'})} 
+
+      const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
+
+      res.json({msg: data.txId})
 
     })
 
