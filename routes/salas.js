@@ -270,47 +270,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             child2 = true 
         }else{return res.json({error: 'The parent user is full'})}
 
-        if(last === true){
-            await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: user.userName}, {repeated: repitedUser.users[0].repeated} ] }} }, {
-                $set: { 'users.$.last': false }
-            }) 
-        }
-        
-        if(child1 === true){
-            await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }} }, {
-                $set: { 'users.$.childsId.childId1': `${user.userName} ${countRepeated}` }
-            }) 
-        }
-
-        if(child2 === true){
-            await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }}}, {
-                $set: { 
-                    'users.$.childsId.childId2': `${user.userName} ${countRepeated}`,
-                    'users.$.space': false
-                }
-            }) 
-        }
-        
-        await salasModel.updateOne({_id: salaId}, {
-            $push: {
-                'users': {
-                    user: user.userName,
-                    space: true,
-                    parentId: parent.users[0].user,
-                    childsId: {
-                        childId1: '',
-                        childId2: ''
-                    },
-                    active: true,
-                    last: true,
-                    repeated: countRepeated
-                }
-            }
-        })
-
-        price.usersNumber = price.usersNumber + 1
-
-        /* const options = {
+        const options = {
             url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
             method: 'POST',
             body: JSON.stringify({
@@ -334,7 +294,47 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
       
             if(data.statusCode && data.statusCode >= 400){ 
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-            } */
+            }
+
+            if(last === true){
+                await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: user.userName}, {repeated: repitedUser.users[0].repeated} ] }} }, {
+                    $set: { 'users.$.last': false }
+                }) 
+            }
+            
+            if(child1 === true){
+                await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }} }, {
+                    $set: { 'users.$.childsId.childId1': `${user.userName} ${countRepeated}` }
+                }) 
+            }
+    
+            if(child2 === true){
+                await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: parentUser}, {active: true} ] }}}, {
+                    $set: { 
+                        'users.$.childsId.childId2': `${user.userName} ${countRepeated}`,
+                        'users.$.space': false
+                    }
+                }) 
+            }
+            
+            await salasModel.updateOne({_id: salaId}, {
+                $push: {
+                    'users': {
+                        user: user.userName,
+                        space: true,
+                        parentId: parent.users[0].user,
+                        childsId: {
+                            childId1: '',
+                            childId2: ''
+                        },
+                        active: true,
+                        last: true,
+                        repeated: countRepeated
+                    }
+                }
+            })
+    
+            price.usersNumber = price.usersNumber + 1
 
             user.wallet = new Decimal(user.wallet).sub(price.price).toNumber()
             
@@ -359,7 +359,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         
             res.json({msg: 'User added successfully', id: salaId})
 
-        /* }) */
+        })
         
     }catch(error){
         console.log(error)

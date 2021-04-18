@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
+const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const request = require('request')
 const userModel = require('../models/Users')
-const salasModel = require('../models/Salas')
 const verifyToken = require('../Middlewares/verifyToken')
 const Decimal = require('decimal.js-light')
 const balanceUserModel = require('../models/BalanceUser')
@@ -241,7 +241,7 @@ router.post('/api/notificationbtc', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/cancelWithdraw', async(req, res) => {
+router.post('/api/cancelWithdraw', csrfProtection, verifyTokenAdmin, async(req, res) => {
   try{
 
     const { id } = req.body
@@ -306,7 +306,7 @@ router.post('/api/cancelWithdraw', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/tatumDetailUser', async(req, res) => {
+router.post('/api/tatumDetailUser', csrfProtection, verifyTokenAdmin, async(req, res) => {
   try{
 
     const { username, myWallet } = req.body
@@ -359,7 +359,7 @@ router.post('/api/tatumDetailUser', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/transactiondetail', async(req, res) => {
+router.post('/api/transactiondetail', csrfProtection, verifyTokenAdmin, async(req, res) => {
   try{
 
     const { id } = req.body
