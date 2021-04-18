@@ -38,7 +38,7 @@ router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
       return res.json({error: 'Password is incorrect'})
     }
 
-    const fee = '0.00004'
+    const fee = '0.0001'
     const amountWithFee = new Decimal(parseFloat(amount)).sub(parseFloat(fee)).toNumber()
 
     const options = {

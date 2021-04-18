@@ -117,7 +117,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).toNumber()
 
         let verification
-        console.log(totalDeposits, egresos, totalEgreso2wanted, totalEgresoUsers)
+        
         if(actual === actualEnCuenta){verification = 'Balanceado'}else{verification = 'Desbalance'}
 
         res.json({egresos, totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification, verification2: actual})
