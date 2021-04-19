@@ -53,29 +53,25 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
     /* ------------------------Nivel 3------------------------------------------------------------------------------- */
     
         if(child3_1){
-            var parent3_1 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_1.split(" ")[0]}, {repeated: child3_1.split(" ")[1]} ] }}})
-           
+            var parent3_1 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_1.split(" ")[0]}, {repeated: child3_1.split(" ")[1]} ] }}})         
             
             var child4_1 = parent3_1.users[0].childsId.childId1
             var child4_2 = parent3_1.users[0].childsId.childId2
         }
         if(child3_2){
-            var parent3_2 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_2.split(" ")[0]}, {repeated: child3_2.split(" ")[1]} ] }}})
-           
+            var parent3_2 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_2.split(" ")[0]}, {repeated: child3_2.split(" ")[1]} ] }}})           
     
             var child4_3 = parent3_2.users[0].childsId.childId1
             var child4_4 = parent3_2.users[0].childsId.childId2
         }
         if(child3_3){
             var parent3_3 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_3.split(" ")[0]}, {repeated: child3_3.split(" ")[1]} ] }}})
-            
     
             var child4_5 = parent3_3.users[0].childsId.childId1
             var child4_6 = parent3_3.users[0].childsId.childId2
         }
         if(child3_4){
-            var parent3_4 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_4.split(" ")[0]}, {repeated: child3_4.split(" ")[1]} ] }}})
-          
+            var parent3_4 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child3_4.split(" ")[0]}, {repeated: child3_4.split(" ")[1]} ] }}})          
     
             var child4_7 = parent3_4.users[0].childsId.childId1
             var child4_8 = parent3_4.users[0].childsId.childId2
@@ -91,43 +87,37 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
             var child5_2 = parent4_1.users[0].childsId.childId2
         }
         if(child4_2){
-            var parent4_2 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_2.split(" ")[0]}, {repeated: child4_2.split(" ")[1]} ] }}})
-          
+            var parent4_2 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_2.split(" ")[0]}, {repeated: child4_2.split(" ")[1]} ] }}})          
     
             var child5_3 = parent4_2.users[0].childsId.childId1
             var child5_4 = parent4_2.users[0].childsId.childId2
         }
         if(child4_3){
             var parent4_3 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_3.split(" ")[0]}, {repeated: child4_3.split(" ")[1]} ] }}})
-         
     
             var child5_5 = parent4_3.users[0].childsId.childId1
             var child5_6 = parent4_3.users[0].childsId.childId2
         }
         if(child4_4){
-            var parent4_4 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_4.split(" ")[0]}, {repeated: child4_4.split(" ")[1]} ] }}})
-          
+            var parent4_4 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_4.split(" ")[0]}, {repeated: child4_4.split(" ")[1]} ] }}})         
     
             var child5_7 = parent4_4.users[0].childsId.childId1
             var child5_8 = parent4_4.users[0].childsId.childId2
         }
         if(child4_5){
-            var parent4_5 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_5.split(" ")[0]}, {repeated: child4_5.split(" ")[1]} ] }}})
-        
+            var parent4_5 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_5.split(" ")[0]}, {repeated: child4_5.split(" ")[1]} ] }}})       
             
             var child5_9 = parent4_5.users[0].childsId.childId1
             var child5_10 = parent4_5.users[0].childsId.childId2
         }
         if(child4_6){
-            var parent4_6 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_6.split(" ")[0]}, {repeated: child4_6.split(" ")[1]} ] }}})
-    
+            var parent4_6 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_6.split(" ")[0]}, {repeated: child4_6.split(" ")[1]} ] }}}) 
     
             var child5_11 = parent4_6.users[0].childsId.childId1
             var child5_12 = parent4_6.users[0].childsId.childId2
         }
         if(child4_7){
-            var parent4_7 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_7.split(" ")[0]}, {repeated: child4_7.split(" ")[1]} ] }}})
-            
+            var parent4_7 = await salasModel.findOne({_id: salaId}, {users: {$elemMatch: { $and: [ {user: child4_7.split(" ")[0]}, {repeated: child4_7.split(" ")[1]} ] }}})    
     
             var child5_13 = parent4_7.users[0].childsId.childId1
             var child5_14 = parent4_7.users[0].childsId.childId2
