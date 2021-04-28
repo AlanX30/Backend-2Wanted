@@ -237,8 +237,12 @@ router.post('/api/autologout', csrfProtection, async(req, res) => {
     try{
 
         const { username } = req.body
-        
+
+        if(!username){ return }
+
         const user = await userModel.findOne({userName: username}, {accessToken: 1})
+
+        if(!user){ return }
 
         user.accessToken = ''
 
