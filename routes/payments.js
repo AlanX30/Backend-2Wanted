@@ -115,7 +115,7 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
       return res.json({error: 'Password is incorrect'})
     }
 
-    const userRecipient = await userModel.findOne({userName: username}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1 })
+    const userRecipient = await userModel.findOne({userName: username}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
 
     const amountNumber = parseFloat(amount)
 
@@ -157,9 +157,10 @@ router.post('/api/sendinternalbtc', csrfProtection, verifyToken, async(req, res)
 
         if(userRecipient.firstDeposit === true){ 
           depositAmount = new Decimal(amountNumber).sub(0.00002).toNumber()
+          userRecipient.reserveWallet = 0.00002
           userRecipient.firstDeposit = false
         }
-
+        
         userRecipient.wallet = new Decimal(userRecipient.wallet).add(depositAmount).toNumber()
 
         const newWithdraw = new balanceUserModel({ 
@@ -210,7 +211,9 @@ router.post('/api/notificationbtc', async(req, res) => {
 
     const user = await userModel.findOne({idWallet: accountId}, { wallet: 1, userName: 1, firstDeposit: 1 })
 
-    let depositAmount = parseFloat(amount)
+    const amountNumber = parseFloat(amount)
+
+    let depositAmount = amountNumber
 
     if(user.firstDeposit === true){ 
       depositAmount = new Decimal(depositAmount).sub(0.00002).toNumber()

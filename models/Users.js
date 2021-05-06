@@ -17,6 +17,7 @@ const UserSchema = new Schema({
     accessToken: {type: String},
     idNotifications: {type: String},
     wallet: {type: Number, default: 0},
+    reserveWallet: { type: Number },
     date: { type: Date, default: Date.now},
 })
 

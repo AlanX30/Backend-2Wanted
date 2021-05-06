@@ -109,12 +109,21 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let totalInWallets = 0
     
         if(sumaWallets.length > 0){ totalInWallets = sumaWallets[0].suma }
+
+        const sumaReserve = await userModel.aggregate([{$group: {
+            _id: null,
+            suma: {$sum: '$reserveWallet'}
+        }}])
+    
+        let reserve = 0
+    
+        if(sumaReserve.length > 0){ reserve = sumaReserve[0].suma }
     
         /* ---------------------------------------------------------------------------------------------------------------- */
         
         actual2wanted = new Decimal(totalWon).sub(totalEgreso2wanted).toNumber()
 
-        const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).toNumber()
+        const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).sub(reserve).toNumber()
 
         let verification
         
