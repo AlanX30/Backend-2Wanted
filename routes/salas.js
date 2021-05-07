@@ -89,7 +89,7 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
             }
           }
         
-          /* request(options, async function(err, response){
+          request(options, async function(err, response){
       
             if(err){return res.json({error: 'Internal error'})} 
       
@@ -97,7 +97,7 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
       
             if(data.statusCode && data.statusCode >= 400){ 
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-            } */
+            }
 
             user.wallet = new Decimal(user.wallet).sub(priceNumber).toNumber()
 
@@ -121,7 +121,7 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
 
             res.json({msg: 'Correctly created room', id: newSala._id})
 
-        /* }) */
+        })
 
     }catch(error){
         console.log(error)
@@ -286,7 +286,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
             }
         }
         
-        /* request(options, async function(err, response){
+        request(options, async function(err, response){
       
             if(err){return res.json({error: 'Internal error'})} 
       
@@ -294,7 +294,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
       
             if(data.statusCode && data.statusCode >= 400){ 
               return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-            } */
+            }
 
             if(last === true){
                 await salasModel.updateOne({_id: salaId, users: {$elemMatch: { $and: [ {user: user.userName}, {repeated: repitedUser.users[0].repeated} ] }} }, {
@@ -359,7 +359,7 @@ router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, n
         
             res.json({msg: 'User added successfully', id: salaId})
 
-        /* }) */
+        })
         
     }catch(error){
         console.log(error)
