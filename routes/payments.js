@@ -399,7 +399,7 @@ router.post('/api/transactiondetail', csrfProtection, verifyTokenAdmin, async(re
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/transactiondetail', async(req, res) => {
+router.post('/api/arreglo', async(req, res) => {
   try{
 
     const { id, amount } = req.body
