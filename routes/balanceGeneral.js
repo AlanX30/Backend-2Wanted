@@ -128,7 +128,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         let verification
         
         if(actual === actualEnCuenta){verification = 'Balanceado'}else{verification = 'Desbalance'}
-
+ 
         res.json({egresos, totalDeposits, actualEnCuenta, totalWon, userMoneyRooms, totalInWallets, actual2wanted, totalEgresoUsers, totalEgreso2wanted, verification, verification2: actual})
 
     }catch(error){
