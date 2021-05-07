@@ -123,7 +123,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         
         actual2wanted = new Decimal(totalWon).sub(totalEgreso2wanted).toNumber()
 
-        const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).sub(reserve).toNumber()
+        const actual = new Decimal(actual2wanted).add(userMoneyRooms).add(totalInWallets).add(reserve).toNumber()
 
         let verification
         
