@@ -568,7 +568,7 @@ router.post('/api/mailverificationRefresh', csrfProtection, /* limiterEmail, */ 
         await user.save()
 
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
-        console.log(user, code)
+
         let transporter = nodemailer.createTransport({
             host: 'mail.privateemail.com',
             port: 465,
