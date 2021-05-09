@@ -8,16 +8,8 @@ const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const csp = require('helmet-csp')
 const path = require('path')
-const rateLimit = require("express-rate-limit")
 require('dotenv').config()
 require('./database')
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 200, // limit each IP to 200 requests per windowMs
-    statusCode: 200, 
-    message: 'has exceeded the number of attempts, try again in 15 minutes' 
-});
 
 ///* ------------Socket init--------------------------------- */
 
@@ -27,7 +19,6 @@ socket.connect(server)
 
 app.use(helmet())
 app.use(cookieParser(process.env.SECRET_COOKIE))
-app.use(limiter)
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
