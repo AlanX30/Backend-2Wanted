@@ -550,7 +550,7 @@ router.post('/api/mailverificationRefresh', csrfProtection, /* limiterEmail, */ 
     try {
 
         const { email } = req.body
-        const user = await userModel.findOne({email: email}, {email:1, emailHash: 1, })
+        const user = await userModel.findOne({email: email}, {email:1, emailHash: 1 })
         
         const random1 = Math.floor(Math.random() * (9-0+1))
         const random2 = Math.floor(Math.random() * (9-0+1))
@@ -568,7 +568,7 @@ router.post('/api/mailverificationRefresh', csrfProtection, /* limiterEmail, */ 
         await user.save()
 
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
-    
+        console.log(user, code)
         let transporter = nodemailer.createTransport({
             host: 'mail.privateemail.com',
             port: 465,
@@ -626,7 +626,7 @@ router.post('/api/forgotpassword', csrfProtection, /* limiterEmail, */ async(req
         await user.save()
         
         const html = require('../PlantillasMail/forgotPassword').forgotPassword(forgotHash)
-    
+        
         let transporter = nodemailer.createTransport({
             host: 'mail.privateemail.com',
             port: 465,
