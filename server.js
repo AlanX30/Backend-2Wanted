@@ -31,7 +31,7 @@ app.use(
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },
-      reportOnly: false,
+      reportOnly: true,
     })
 )
 app.use(function (req, res, next) {

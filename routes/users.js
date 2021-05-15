@@ -549,7 +549,7 @@ router.post('/api/mailverification', csrfProtection, limiterEmail, async(req, re
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/mailverificationRefresh', csrfProtection, limiterEmail, async(req, res) => {
+router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
     try {
 
         const { email } = req.body
