@@ -182,7 +182,7 @@ router.post('/api/users/signup', csrfProtection, limiterSign, async (req, res) =
         await newUser.save()
 
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
-        console.log(code, userName)
+        
         let transporter = nodemailer.createTransport({
             host: 'mail.privateemail.com',
             port: 465,
