@@ -404,8 +404,8 @@ router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ as
 
     const { amount, senderAccount, recipientAccount } = req.body
 
-    const senderUser = await findOne({userName: senderAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
-    const recipientUser = await findOne({userName: recipientAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+    const senderUser = await userModel.findOne({userName: senderAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+    const recipientUser = await userModel.findOne({userName: recipientAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
 
     const amountNumber = parseFloat(amount)
 
