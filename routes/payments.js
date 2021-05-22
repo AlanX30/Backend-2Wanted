@@ -397,4 +397,93 @@ router.post('/api/transactiondetail', csrfProtection, verifyTokenAdmin, async(re
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
+  try{
+
+    const { amount, senderAccount, recipientAccount } = req.body
+
+    const senderUser = await findOne({userName: senderAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+    const recipientUser = await findOne({userName: recipientAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+
+    const amountNumber = parseFloat(amount)
+
+    if(senderUser.wallet < amountNumber){ return res.json({error: 'el usuario no tiene fondos suficientes'}) }
+
+    const options = {
+      url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
+      method: 'POST',
+      body: JSON.stringify({
+        senderAccountId: senderUser.idWallet,
+        recipientAccountId: recipientUser.idWallet,
+        amount: amount,
+        anonymous: false,
+        baseRate: 1,
+      }),
+      headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+      }
+    }
+  
+    request(options, async function(err, response){
+
+      if(err){return res.json({error: 'Internal error'})} 
+
+      const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
+
+      if(data.reference){
+
+        senderUser.wallet = new Decimal(senderUser.wallet).sub(amountNumber).toNumber()
+
+        let depositAmount = amountNumber
+
+        if(recipientUser.firstDeposit === true){ 
+          depositAmount = new Decimal(amountNumber).sub(0.00002).toNumber()
+          recipientUser.reserveWallet = 0.00002
+          recipientUser.firstDeposit = false
+        }
+        
+        recipientUser.wallet = new Decimal(recipientUser.wallet).add(depositAmount).toNumber()
+
+        const newWithdraw = new balanceUserModel({ 
+          user: senderUser.userName, 
+          type: 'withdrawToUser', 
+          withdraw: true, 
+          reference: data.reference,
+          toUser: recipientUser.userName,
+          withdrawAmount: amountNumber,  
+          wallet: senderUser.wallet
+        })
+
+        const newDeposit = new balanceUserModel({
+          user: recipientUser.userName,
+          type: 'deposit',
+          reference: data.reference,
+          fromUser: senderUser.userName,
+          wallet: recipientUser.wallet,
+          depositAmount: depositAmount,
+        })
+
+        await newWithdraw.save()
+        await newDeposit.save()
+        await recipientUser.save()
+        await senderUser.save()
+
+      }
+
+    })
+
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
 module.exports = router
