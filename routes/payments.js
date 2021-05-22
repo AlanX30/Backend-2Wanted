@@ -475,6 +475,8 @@ router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ as
         await recipientUser.save()
         await senderUser.save()
 
+        res.json({msg: 'transaction complete'})
+
       }
 
     })
