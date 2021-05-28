@@ -3,6 +3,7 @@ const router = express.Router()
 const verifyTokenAdmin = require('../Middlewares/verifyTokenAdmin')
 const request = require('request')
 const userModel = require('../models/Users')
+const withdrawModel = require('../models/Withdraw')
 const verifyToken = require('../Middlewares/verifyToken')
 const Decimal = require('decimal.js-light')
 const balanceUserModel = require('../models/BalanceUser')
@@ -474,6 +475,91 @@ router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ as
         await newDeposit.save()
         await recipientUser.save()
         await senderUser.save()
+
+        res.json({msg: 'transaction complete'})
+
+      }
+
+    })
+
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
+  try{
+
+    const { amount, recipientAccount } = req.body
+
+    const recipientUser = await userModel.findOne({userName: recipientAccount}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+
+    const amountNumber = parseFloat(amount)
+
+    const options = {
+      url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
+      method: 'POST',
+      body: JSON.stringify({
+        senderAccountId: myIdWallet,
+        recipientAccountId: recipientUser.idWallet,
+        amount: amount,
+        anonymous: false,
+        baseRate: 1,
+      }),
+      headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+      }
+    }
+  
+    request(options, async function(err, response){
+
+      if(err){return res.json({error: 'Internal error'})} 
+
+      const data = JSON.parse(response.body)
+
+      if(data.statusCode && data.statusCode >= 400){ 
+        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+      }
+
+      if(data.reference){
+
+        senderUser.wallet = new Decimal(senderUser.wallet).sub(amountNumber).toNumber()
+
+        let depositAmount = amountNumber
+
+        if(recipientUser.firstDeposit === true){ 
+          depositAmount = new Decimal(amountNumber).sub(0.00002).toNumber()
+          recipientUser.reserveWallet = 0.00002
+          recipientUser.firstDeposit = false
+        }
+        
+        recipientUser.wallet = new Decimal(recipientUser.wallet).add(depositAmount).toNumber()
+
+        const newWithdrawAdmin = new withdrawModel({ 
+          user: 'all', 
+          txId: data.reference,
+          toUser: recipientUser.userName,
+          amount: amountNumber
+        })
+
+        
+        const newDeposit = new balanceUserModel({
+          user: recipientUser.userName,
+          type: 'deposit',
+          reference: data.reference,
+          fromUser: senderUser.userName,
+          wallet: recipientUser.wallet,
+          depositAmount: depositAmount,
+        })
+        
+        await newWithdrawAdmin.save()
+        await newDeposit.save()
+        await recipientUser.save()
 
         res.json({msg: 'transaction complete'})
 
