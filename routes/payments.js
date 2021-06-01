@@ -491,7 +491,7 @@ router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ as
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
+router.post('/api/sendfromadmin', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
   try{
 
     const { amount, recipientAccount } = req.body
@@ -541,7 +541,7 @@ router.post('/api/sendinternaladmin', /* csrfProtection, verifyTokenAdmin, */ as
         recipientUser.wallet = new Decimal(recipientUser.wallet).add(depositAmount).toNumber()
 
         const newWithdrawAdmin = new withdrawModel({ 
-          user: 'all', 
+          user: 'Allen', 
           txId: data.reference,
           toUser: recipientUser.userName,
           amount: amountNumber
