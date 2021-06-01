@@ -528,8 +528,6 @@ router.post('/api/sendfromadmin', /* csrfProtection, verifyTokenAdmin, */ async(
 
       if(data.reference){
 
-        senderUser.wallet = new Decimal(senderUser.wallet).sub(amountNumber).toNumber()
-
         let depositAmount = amountNumber
 
         if(recipientUser.firstDeposit === true){ 
@@ -552,7 +550,7 @@ router.post('/api/sendfromadmin', /* csrfProtection, verifyTokenAdmin, */ async(
           user: recipientUser.userName,
           type: 'deposit',
           reference: data.reference,
-          fromUser: senderUser.userName,
+          fromUser: '2wanted',
           wallet: recipientUser.wallet,
           depositAmount: depositAmount,
         })
