@@ -540,6 +540,7 @@ router.post('/api/sendfromadmin', /* csrfProtection, verifyTokenAdmin, */ async(
 
         const newWithdrawAdmin = new withdrawModel({ 
           user: 'Allen', 
+          type: true,
           txId: data.reference,
           toUser: recipientUser.userName,
           amount: amountNumber

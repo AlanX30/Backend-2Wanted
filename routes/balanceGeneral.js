@@ -58,7 +58,7 @@ router.post('/api/admin/generalTotalBalance', csrfProtection, verifyTokenAdmin, 
         const egresos = new Decimal(totalEgreso2wanted).add(totalEgresoUsers).toNumber()
         
         const actualEnCuenta = new Decimal(totalDeposits).sub(egresos).toNumber()
-    
+        console.log( egreso2wanted, egresos, actualEnCuenta )
         /* ---------------------------------------------------------------------------------------------------------------- */
     
         const balance = await salasModel.find({}, {users: 0, creator: 0})
