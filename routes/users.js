@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const { verify } = require('hcaptcha')
 const userModel = require('../models/Users')
 const request = require('request')
 const safe = require('safe-regex')
@@ -17,6 +18,7 @@ const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_whiteSpace = /^$|\s+/
 const reg_email = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
 
+const secretCaptcha = process.env.HCAPTCHA
 const apiKey = process.env.BTCAPIKEY
 const xpub = process.env.XPUB
 
@@ -120,11 +122,15 @@ router.get('/api/csrf', csrfProtection, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', csrfProtection, limiterSign, async (req, res) => {
+router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, res) => {
     
     try{
 
-        const { userName ,email, password, confirm_password } = req.body
+        const { userName ,email, token, password, confirm_password } = req.body
+
+        let verifyCaptcha = await verify(secretCaptcha, token)
+        console.log(verifyCaptcha, secretCaptcha, token)
+        if(!verifyCaptcha.success){ return res.json({error: 'Invalid Captcha'}) }
 
         if(safe(reg_email.test(email))){
             if(!reg_email.test(email)){
