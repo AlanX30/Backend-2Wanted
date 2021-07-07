@@ -126,11 +126,7 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
     
     try{
 
-        const { userName ,email, token, password, confirm_password } = req.body
-
-        let verifyCaptcha = await verify('0c5fbce3-bbe4-4510-8a92-7b2b439f5e4d', token)
-        console.log(verifyCaptcha, token)
-        if(!verifyCaptcha.success){ return res.json({error: 'Invalid Captcha'}) }
+        const { userName ,email, password, confirm_password } = req.body
 
         if(safe(reg_email.test(email))){
             if(!reg_email.test(email)){
