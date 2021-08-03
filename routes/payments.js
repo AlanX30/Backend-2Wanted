@@ -275,15 +275,15 @@ router.post('/api/cancelWithdraw', /* csrfProtection, verifyTokenAdmin, */ async
           }
         }
     
-        request(options2 , async function(err, response2){
+        request(options2 , async function(err2, response2){
     
-            if(err){ return res.json({error: 'Internal Error'}) }
+            if(err2){ return res.json({error: 'Internal Error'}) }
 
             if(response2.statusCode < 300){ 
 
-              return res.json({msg: 'Transaccion devuelta'}) 
+              return res.json(response2) 
 
-            }else{ return res.json({error: 'Internal Error'})}
+            }else{ return res.json(response2)}
     
         })
 
@@ -672,9 +672,9 @@ router.post('/api/cancelWithdraw1', /* csrfProtection, verifyTokenAdmin, */ asyn
 
         if(response2.statusCode < 300){ 
 
-          return res.json({msg: 'Transaccion devuelta'}) 
+          return res.json(response2) 
 
-        }else{ return res.json({error: 'Internal Error'})}
+        }else{ return res.json(response2)}
 
     })
 
