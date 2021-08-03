@@ -634,9 +634,11 @@ router.post('/api/cancelWithdraw2', /* csrfProtection, verifyTokenAdmin, */ asyn
 
             if(response2.statusCode < 300){ 
 
-              return res.json({msg: 'Transaccion devuelta'}) 
+              return res.json(response2) 
 
-            }else{ return res.json({error: 'Internal Error'})}
+            }else{ 
+              return res.json(response2)
+            }
     
         })
 
