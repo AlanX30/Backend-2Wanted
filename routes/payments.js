@@ -245,7 +245,7 @@ router.post('/api/notificationbtc', async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/cancelWithdraw', csrfProtection, verifyTokenAdmin, async(req, res) => {
+router.post('/api/cancelWithdraw', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
   try{
 
     const { id } = req.body
@@ -280,18 +280,6 @@ router.post('/api/cancelWithdraw', csrfProtection, verifyTokenAdmin, async(req, 
             if(err){ return res.json({error: 'Internal Error'}) }
 
             if(response2.statusCode < 300){ 
-
-              const deleteBalance = await balanceUserModel.findOneAndDelete({signatureId: id})
-
-              if(!deleteBalance){ return res.json({error: 'Signature eliminado del balance'})}
-
-              const username = deleteBalance.user
-
-              const user = await userModel.findOne({userName: username}, {wallet: 1})
-
-              user.wallet = new Decimal(user.wallet).add(deleteBalance.totalAmount).toNumber()
-
-              await user.save()
 
               return res.json({msg: 'Transaccion devuelta'}) 
 
