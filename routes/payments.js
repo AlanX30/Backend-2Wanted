@@ -580,31 +580,6 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
 
     const { amount, address } = req.body
 
-    const options = {
-      url: 'https://api-eu1.tatum.io/v3/offchain/blockchain/estimate',
-      method: 'POST',
-      body: JSON.stringify({
-        senderAccountId: myIdWallet,
-        address: address,
-        amount: amount,
-        xpub: xpub
-      }),
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json'
-      }
-    }
-
-    request(options, async function(err, response){
-      
-      if(err){return res.json({error1: 'Internal error'})} 
-
-      const data = JSON.parse(response.body)
-
-      if(data.statusCode && data.statusCode >= 400){ 
-        return res.json({error1: `${data.message} -Api tatum, Error ${data.statusCode}-`})
-      }
-      console.log(data)
       const options2 = {
         url: 'https://api-eu1.tatum.io/v3/offchain/bitcoin/transfer',
         method: 'POST',
@@ -612,7 +587,7 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
           senderAccountId: myIdWallet,
           address: address,
           amount: amount,
-          fee: data.slow,
+          fee: '0.00007',
           signatureId: signatureId,
           xpub: xpub
         }),
@@ -635,8 +610,6 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
         res.json(data2)
   
       })
-
-    })
 
   }catch(error){
     console.log(error)
