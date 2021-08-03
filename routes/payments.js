@@ -586,7 +586,8 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
       body: JSON.stringify({
         senderAccountId: myIdWallet,
         address: address,
-        amount: amount
+        amount: amount,
+        xpub: xpub
       }),
       headers: {
         'x-api-key': apiKey,
@@ -596,12 +597,12 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
 
     request(options, async function(err, response){
       
-      if(err){return res.json({error: 'Internal error'})} 
+      if(err){return res.json({error1: 'Internal error'})} 
 
       const data = JSON.parse(response.body)
 
       if(data.statusCode && data.statusCode >= 400){ 
-        return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+        return res.json({error1: `${data.message} -Api tatum, Error ${data.statusCode}-`})
       }
       console.log(data)
       const options2 = {
@@ -623,12 +624,12 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
   
       request(options2, async function(err2, response2){
   
-        if(err2){return res.json({error: 'Internal error'})} 
+        if(err2){return res.json({error2: 'Internal error'})} 
   
         const data2 = JSON.parse(response2.body)
   
         if(data2.statusCode && data2.statusCode >= 400){ 
-          return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
+          return res.json({error2: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
         }
   
         res.json(data2)
