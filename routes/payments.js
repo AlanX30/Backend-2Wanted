@@ -606,4 +606,39 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/cancelWithdraw2', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
+  try{
+
+    const { id } = req.body
+        
+        const options2 = {
+          url: `https://api-eu1.tatum.io/v3/offchain/withdrawal/${id}`,
+          method: 'DELETE',
+          headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json'
+          }
+        }
+    
+        request(options2 , async function(err, response2){
+    
+            if(err){ return res.json({error: 'Internal Error'}) }
+
+            if(response2.statusCode < 300){ 
+
+              return res.json({msg: 'Transaccion devuelta'}) 
+
+            }else{ return res.json({error: 'Internal Error'})}
+    
+        })
+
+  }catch(error){
+    console.log(error)
+    res.json({error: 'Internal Error'})
+  }
+})
+
+/* ------------------------------------------------------------------------------------------------------- */
 module.exports = router
