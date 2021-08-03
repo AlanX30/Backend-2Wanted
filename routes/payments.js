@@ -576,7 +576,7 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
           address: address,
           amount: amount,
           fee: '0.00007',
-          mnemonic: 'fury dentist other square street flame depth scheme meat child zero evoke name extend soda genuine artwork final enroll poet border iron current jeans',
+          signatureId: signatureId,
           xpub: xpub
         }),
         headers: {
