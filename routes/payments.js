@@ -366,8 +366,11 @@ router.post('/api/transactiondetail', /* csrfProtection, verifyTokenAdmin, */ as
     }
 
     request(options, async function(err, response){
-
-      if(err){return res.json({error: 'Internal error'})} 
+  
+      if(err){
+        console.log(err)
+        return res.json({error: 'Internal error'})
+      } 
 
       const data = JSON.parse(response.body)
 
@@ -624,7 +627,10 @@ router.post('/api/cancelWithdraw2', /* csrfProtection, verifyTokenAdmin, */ asyn
     
         request(options2 , async function(err, response2){
     
-            if(err){ return res.json({error: 'Internal Error'}) }
+          if(err){
+            console.log(err)
+            return res.json({error: 'Internal error'})
+          } 
 
             if(response2.statusCode < 300){ 
 
@@ -659,7 +665,10 @@ router.post('/api/cancelWithdraw1', /* csrfProtection, verifyTokenAdmin, */ asyn
 
     request(options2 , async function(err, response2){
 
-        if(err){ return res.json({error: 'Internal Error'}) }
+      if(err){
+        console.log(err)
+        return res.json({error: 'Internal error'})
+      } 
 
         if(response2.statusCode < 300){ 
 
