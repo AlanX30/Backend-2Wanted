@@ -575,7 +575,7 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
           senderAccountId: myIdWallet,
           address: address,
           amount: amount,
-          fee: '0.00007',
+          fee: '0.00012',
           signatureId: signatureId,
           xpub: xpub
         }),
