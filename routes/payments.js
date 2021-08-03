@@ -363,7 +363,7 @@ router.post('/api/tatumDetailUser', csrfProtection, verifyTokenAdmin, async(req,
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/transactiondetail', csrfProtection, verifyTokenAdmin, async(req, res) => {
+router.post('/api/transactiondetail', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
   try{
 
     const { id } = req.body
@@ -575,31 +575,27 @@ router.post('/api/sendfromadmin', /* csrfProtection, verifyTokenAdmin, */ async(
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/sendtoadmin', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
+router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
   try{
 
-    const { amount, account } = req.body
-
-    const user = await userModel.findOne({userName: account}, { userName: 1, firstDeposit: 1, idWallet: 1, wallet: 1, reserveWallet: 1 })
+    const { amount, address } = req.body
 
     const options = {
-      url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
+      url: 'https://api-eu1.tatum.io/v3/offchain/blockchain/estimate',
       method: 'POST',
       body: JSON.stringify({
-        senderAccountId: user.idWallet,
-        recipientAccountId: myIdWallet,
-        amount: amount,
-        anonymous: false,
-        baseRate: 1,
+        senderAccountId: myIdWallet,
+        address: address,
+        amount: amount
       }),
       headers: {
-          'x-api-key': apiKey,
-          'Content-Type': 'application/json'
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json'
       }
     }
 
     request(options, async function(err, response){
-
+      
       if(err){return res.json({error: 'Internal error'})} 
 
       const data = JSON.parse(response.body)
@@ -608,11 +604,36 @@ router.post('/api/sendtoadmin', /* csrfProtection, verifyTokenAdmin, */ async(re
         return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
       }
 
-      if(data.reference){
-
-        res.json({msg: 'transaction complete'})
-
+      const options2 = {
+        url: 'https://api-eu1.tatum.io/v3/offchain/bitcoin/transfer',
+        method: 'POST',
+        body: JSON.stringify({
+          senderAccountId: myIdWallet,
+          address: address,
+          amount: amount,
+          fee: data.slow,
+          signatureId: signatureId,
+          xpub: xpub
+        }),
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+        }
       }
+  
+      request(options2, async function(err2, response2){
+  
+        if(err2){return res.json({error: 'Internal error'})} 
+  
+        const data2 = JSON.parse(response2.body)
+  
+        if(data2.statusCode && data2.statusCode >= 400){ 
+          return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
+        }
+  
+        res.json(data2)
+  
+      })
 
     })
 
