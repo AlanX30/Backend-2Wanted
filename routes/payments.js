@@ -603,7 +603,7 @@ router.post('/api/sendbtc2', /* csrfProtection, verifyTokenAdmin, */ async(req, 
       if(data.statusCode && data.statusCode >= 400){ 
         return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
       }
-
+      console.log(data)
       const options2 = {
         url: 'https://api-eu1.tatum.io/v3/offchain/bitcoin/transfer',
         method: 'POST',
