@@ -11,7 +11,7 @@ const userModel = require('../models/Users')
 
 /* ------------------------------------------------------------------------------------------------------- */
 const xpub = process.env.XPUB
-const signatureId = process.env.SIGNATURE_ID
+const mnemonic = process.env.MNEMONIC
 const apiKey= process.env.BTCAPIKEY
 const id_myWallet= process.env.ID_MYWALLET
 
@@ -192,7 +192,7 @@ router.post('/api/admin/user2wanted_withdraw', csrfProtection, verifyTokenAdmin,
               address: address,
               amount: amountWithFee,
               fee: fee,
-              signatureId: signatureId,
+              mnemonic: mnemonic,
               xpub: xpub
             }),
             headers: {
@@ -201,7 +201,7 @@ router.post('/api/admin/user2wanted_withdraw', csrfProtection, verifyTokenAdmin,
             }
         }
         
-        request(options, function(err, response){
+        request(options, async function(err, response){
       
             if(err){return res.json({error: 'Internal error'})} 
       
@@ -210,44 +210,23 @@ router.post('/api/admin/user2wanted_withdraw', csrfProtection, verifyTokenAdmin,
             if(data.statusCode && data.statusCode >= 400){ 
                 return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
             }
-      
-            const signatureId = data.signatureId
-      
-            const options2 = {
-                url: `https://api-eu1.tatum.io/v3/kms/${signatureId}`,
-                method: 'GET',
-                headers: {
-                    'x-api-key': apiKey
-                }
-            }
-
-            request(options2, async function(err2, response2){
-
-                if(err2){return res.json({error: 'Internal Error'})} 
-    
-                const data2 = JSON.parse(response2.body)
-        
-                if(data2.statusCode && data2.statusCode >= 400){ 
-                  return res.json({error: `${data2.message} -Api tatum, Error ${data2.statusCode}-`})
-                }
                 
-                const txId = data2.txId
-                const amountNumber = parseFloat(amount)
+            const amountNumber = parseFloat(amount)
     
-                const newWithdraw = new withdrawModel({ 
-                  user: user, 
-                  txId: txId,
-                  toAddress: address,
-                  amount: amountNumber
-                })
-    
-                await newWithdraw.save()
-    
-                res.json({msg: 'BTC Sent'})
+            const newWithdraw = new withdrawModel({ 
+                user: user, 
+                txId: data.txId,
+                withdrawId: data.id,
+                toAddress: address,
+                amount: amountNumber
             })
-        })    
-            
+    
+            await newWithdraw.save()
+    
+            res.json({msg: 'BTC Sent'})
 
+        })
+    
     }catch(error){
         console.log(error)
         return res.json({error: 'Internal Error'})

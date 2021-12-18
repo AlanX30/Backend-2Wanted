@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const { verify } = require('hcaptcha')
 const userModel = require('../models/Users')
 const request = require('request')
 const safe = require('safe-regex')
@@ -18,7 +17,7 @@ const reg_password = /^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/
 const reg_whiteSpace = /^$|\s+/
 const reg_email = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
 
-const secretCaptcha = process.env.HCAPTCHA
+const secretCaptcha = process.env.CAPTCHA
 const apiKey = process.env.BTCAPIKEY
 const xpub = process.env.XPUB
 
@@ -44,6 +43,28 @@ const limiterEmail = rateLimit({
     statusCode: 200, 
     message: 'has exceeded the number of attempts, try again in 10 minutes'
 })
+
+
+router.post('/api/users/pruebita', async(req, res) => {
+
+    try{
+
+        const options = {
+            url: `https://www.google.com/recaptcha/api/siteverify?secret=${secretCaptcha}&response=${req.body.token}`,
+            method: 'POST',
+          }
+        
+        request(options,function(err, response){
+            const data = JSON.parse(response.body)
+            console.log(data.success)
+        })
+
+    }catch(error){
+
+    }
+
+})
+
 
 router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) => {
 
@@ -126,7 +147,7 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
     
     try{
 
-        const { userName ,email, password, confirm_password } = req.body
+        const { userName ,email, password, confirm_password, captchaToken } = req.body
 
         if(safe(reg_email.test(email))){
             if(!reg_email.test(email)){
@@ -165,47 +186,63 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
             return res.json({error: 'This username already exists'})
         }
 
-        const random1 = Math.floor(Math.random() * (9-0+1))
-        const random2 = Math.floor(Math.random() * (9-0+1))
-        const random3 = Math.floor(Math.random() * (9-0+1))
-        const random4 = Math.floor(Math.random() * (9-0+1))
-        const random5 = Math.floor(Math.random() * (9-0+1))
-        const random6 = Math.floor(Math.random() * (9-0+1))
-
-        const code = `${random1}${random2}${random3}${random4}${random5}${random6}`
-        const uuidHash = uuid() 
-
-        const emailHash = jwt.sign({code}, process.env.EMAILHASH, { expiresIn: 300 })
+        const options = {
+            url: `https://www.google.com/recaptcha/api/siteverify?secret=${secretCaptcha}&response=${captchaToken}`,
+            method: 'POST',
+          }
         
-        const forgotHash = jwt.sign({uuidHash}, process.env.EMAILHASH, { expiresIn: 60 });
+        request(options, async function(err, response){
 
-        const newUser = new userModel({ userName, email, password, emailHash, forgotHash })
-        newUser.password = await newUser.encryptPassword(password)
-        await newUser.save()
+            if(err){return res.json({error: 'Internal Error'})}
+            
+            const data = JSON.parse(response.body)
+            
+            if(data.success === true){
 
-        const html = require('../PlantillasMail/mailVerification').mailVerification(code)
-        
-        let transporter = nodemailer.createTransport({
-            host: 'mail.privateemail.com',
-            port: 465,
-            secure: true,
-            auth: {
-              user: process.env.USER_ADMIN_EMAIL, 
-              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
+                const random1 = Math.floor(Math.random() * (9-0+1))
+                const random2 = Math.floor(Math.random() * (9-0+1))
+                const random3 = Math.floor(Math.random() * (9-0+1))
+                const random4 = Math.floor(Math.random() * (9-0+1))
+                const random5 = Math.floor(Math.random() * (9-0+1))
+                const random6 = Math.floor(Math.random() * (9-0+1))
+
+                const code = `${random1}${random2}${random3}${random4}${random5}${random6}`
+                const uuidHash = uuid() 
+
+                const emailHash = jwt.sign({code}, process.env.EMAILHASH, { expiresIn: 300 })
+                
+                const forgotHash = jwt.sign({uuidHash}, process.env.EMAILHASH, { expiresIn: 60 });
+
+                const newUser = new userModel({ userName, email, password, emailHash, forgotHash })
+                newUser.password = await newUser.encryptPassword(password)
+                await newUser.save()
+
+                const html = require('../PlantillasMail/mailVerification').mailVerification(code)
+                
+                let transporter = nodemailer.createTransport({
+                    host: 'mail.privateemail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                    user: process.env.USER_ADMIN_EMAIL, 
+                    pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
+                    },
+                    tls: {
+                        rejectUnauthorized: false
+                    }
+                })
+
+                await transporter.sendMail({
+                    from: '"2wanted.com" <admin@2wanted.com>',
+                    to: newUser.email,
+                    subject: "Email verification",
+                    html: html
+                })
+
+                res.json({msg: 'verifying email'})
+
+            }else{ return res.json({error: 'Invalid Captcha'})}
         })
-
-        await transporter.sendMail({
-            from: '"2wanted.com" <admin@2wanted.com>',
-            to: newUser.email,
-            subject: "Email verification",
-            html: html
-        })
-
-        res.json({msg: 'verifying email'})
         
     }catch(error){
         console.log(error)

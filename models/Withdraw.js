@@ -6,8 +6,8 @@ const WithdrawSchema = new Schema({
     user: {type: String, required: true},
     amount: {type: Number, required: true},
     txId: {type: String, required: true},
+    withdrawId: {type: String},
     toAddress: {type: String},
-    toUser: {type: String},
     type: { type: Boolean, default: true },
     date: {type: Date, default: Date.now}
 })

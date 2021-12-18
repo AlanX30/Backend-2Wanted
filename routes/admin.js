@@ -21,23 +21,22 @@ const userSignin = process.env.USER_ADMIN_SIGNIN
 router.post('/api/admin/signin', csrfProtection, async(req, res) => {
 
     try{
-        const { password, id, password2 } = req.body
 
-        const user = await userModel.findOne({userName: userSignin}, {password: 1})
+        const { id, password, password2 } = req.body
 
-        if(!user){ return res.json({auth: false, error: 'Id is incorrect'}) }
-
-        const validId = await bcrypt.compare(id, user.password)
-
-        if(!validId){ return res.json({auth: false, error: 'Id is incorrect'}) }
-
-        const user2 = await userModel.findOne({forgotHash: userSignin}, {password: 1})
-
-        const validPassword = await bcrypt.compare(password, user2.password)
+        if(id === userSignin){}else{ return res.json({auth: false, error: 'Id is incorrect'})}
+        
+        const validPassword = await bcrypt.compare(password, process.env.ADMINPASSWORD)
 
         if(!validPassword){ return res.json({auth: false, error: 'Password is incorrect'})}
 
-        if(password2 === process.env.ADMIN2){}else{ return res.json({auth: false, error: 'Password is incorrect'})}
+        const user = await userModel.findOne({userName: id}, {password: 1})
+        
+        if(!user){ return res.json({auth: false, error: 'Id is incorrect'}) }
+        const validPassword2 = await bcrypt.compare(password2, user.password)
+
+
+        if(!validPassword2){ return res.json({auth: false, error: 'Id is incorrect'}) }
 
         const token = jwt.sign({}, process.env.TOKEN_ADMIN, {
             expiresIn: 600
@@ -95,7 +94,7 @@ router.post('/api/admin/withdraw2wantedlist', csrfProtection, verifyTokenAdmin, 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/admin/balanceToExcel', csrfProtection, verifyTokenAdmin, async(req, res) => {
+router.post('/api/admin/balanceToExcel', /* csrfProtection, verifyTokenAdmin, */ async(req, res) => {
 
     try{
         
@@ -142,8 +141,6 @@ router.post('/api/admin/balanceToExcel', csrfProtection, verifyTokenAdmin, async
             worksheet.addRow(balance)
         })
 
-        const date = new Date
-
         worksheet.eachColumnKey(columns => {
             columns.alignment = {vertical: 'middle', horizontal: 'center'}
             columns.border = {
@@ -163,9 +160,18 @@ router.post('/api/admin/balanceToExcel', csrfProtection, verifyTokenAdmin, async
                 right: {style:'medium'}
             }
         })
-        await workbook.xlsx.writeFile(`Excel/Balance ${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}  ${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}.xlsx`)
 
-        res.json({msg: 'Creado Correctmente'})
+        const date = new Date
+
+        const excelName = `Balance${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}Hora${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}.xlsx`
+
+        const bufferExcel = await workbook.xlsx.writeBuffer()
+
+        res.set({
+            'x-processed-filename': excelName
+          });
+        
+        await res.send(bufferExcel)
 
     }catch(error){
         console.log(error)
