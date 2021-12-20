@@ -1,5 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-.key
+
 # dependencies
 /node_modules
 /.pnp
@@ -9,11 +9,8 @@
 /coverage
 
 # production
+
 /build
-routes/private.key
-Middlewares/public.key
-/Middlewares/public.key
-/routes/private.key
 
 # misc
 
