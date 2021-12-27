@@ -182,7 +182,7 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
                 await parent1.save()
             }
 
-            /* const options = {
+            const options = {
                 url: 'https://api-eu1.tatum.io/v3/ledger/transaction',
                 method: 'POST',
                 body: JSON.stringify({
@@ -208,7 +208,7 @@ router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {
                   return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
                 }
     
-            }) */
+            })
   
             user.wallet = new Decimal(user.wallet).add(newCash).toNumber()
             salaPrice.paidUsers = new Decimal(salaPrice.paidUsers).add(newCash).toNumber()
