@@ -44,27 +44,33 @@ const limiterEmail = rateLimit({
     message: 'has exceeded the number of attempts, try again in 10 minutes'
 })
 
-
-router.post('/api/users/pruebita', async(req, res) => {
-
-    try{
-
-        const options = {
-            url: `https://www.google.com/recaptcha/api/siteverify?secret=${secretCaptcha}&response=${req.body.token}`,
-            method: 'POST',
-          }
-        
-        request(options,function(err, response){
-            const data = JSON.parse(response.body)
-            console.log(data.success)
-        })
-
-    }catch(error){
-
+router.post('/api/cuenta', async(req, res) => {
+    const options1 = {
+        url: 'https://api-eu1.tatum.io/v3/ledger/account',
+        method: 'POST',
+        body: JSON.stringify({
+          currency: 'BTC',
+          xpub: xpub,
+          accountingCurrency: 'USD'
+        }),
+        headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+        }
     }
-
+    
+    request(options1, async function(err, response){
+    
+        if(err){return res.json({error: 'Internal Error'})} 
+    
+        const data = JSON.parse(response.body)
+    
+        if(data.statusCode && data.statusCode >= 400){ 
+            return res.json({error: `${data.message} -Api tatum, Error ${data.statusCode}-`})
+        }
+        res.json(data)
+    })
 })
-
 
 router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) => {
 
@@ -143,7 +149,7 @@ router.get('/api/csrf', csrfProtection, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, res) => {
+router.post('/api/users/signup', csrfProtection, limiterSign, async (req, res) => {
     
     try{
 
@@ -781,4 +787,43 @@ router.post('/api/contact_us_email', csrfProtection, limiterEmail, verifyToken, 
     }
 })
 
+/* ------------------------------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------------------- */
+
+router.post('/api/portafolioemail', limiterEmail, async(req, res) => {
+    try {
+
+        const { fromEmail, msg } = req.body
+
+        if(fromEmail.length > 50){ return res.json({error: 'The subject is very long'})}
+        if(msg.length > 1000){ return res.json({error: 'The message is very long'})}
+
+        let transporter = nodemailer.createTransport({
+            host: 'mail.privateemail.com',
+            port: 465,
+            secure: true,
+            auth: {
+              user: process.env.USER_ADMIN_EMAIL, 
+              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        })
+
+        await transporter.sendMail({
+            from: '"2wanted.com" <admin@2wanted.com>',
+            to: 'alandevsolano@gmail.com',
+            subject: `Mensaje desde el portafolio por [${fromEmail}]`,
+            text: msg
+        })
+
+        res.json({msg: 'Email Sent successfully'})
+
+    }catch (error){
+        console.log(error)
+        res.json({error: 'Internal error'})
+    }
+
+})
 module.exports = router
