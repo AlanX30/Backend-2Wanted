@@ -788,42 +788,5 @@ router.post('/api/contact_us_email', csrfProtection, limiterEmail, verifyToken, 
 })
 
 /* ------------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/portafolioemail', limiterEmail, async(req, res) => {
-    try {
-
-        const { fromEmail, msg } = req.body
-
-        if(fromEmail.length > 50){ return res.json({error: 'The subject is very long'})}
-        if(msg.length > 1000){ return res.json({error: 'The message is very long'})}
-
-        let transporter = nodemailer.createTransport({
-            host: 'mail.privateemail.com',
-            port: 465,
-            secure: true,
-            auth: {
-              user: process.env.USER_ADMIN_EMAIL, 
-              pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        })
-
-        await transporter.sendMail({
-            from: '"2wanted.com" <admin@2wanted.com>',
-            to: 'alandevsolano@gmail.com',
-            subject: `Mensaje desde el portafolio por [${fromEmail}]`,
-            text: msg
-        })
-
-        res.json({msg: 'Email Sent successfully'})
-
-    }catch (error){
-        console.log(error)
-        res.json({error: 'Internal error'})
-    }
-
-})
 module.exports = router

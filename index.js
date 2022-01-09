@@ -24,12 +24,13 @@ app.use(express.urlencoded({extended: false}))
 app.use(express.json())
 app.use(
     csp({
+      useDefaults: true,
       directives: {
-        defaultSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        defaultSrc: ["'self'", "'unsafe-inline'", 'https://fonts.gstatic.com/', 'https://www.google.com/'],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com/', 'https://fonts.gstatic.com/'],
         objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
+        upgradeInsecureRequests: ["'false'"],
       },
       reportOnly: true,
     })
