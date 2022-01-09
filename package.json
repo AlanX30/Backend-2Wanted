@@ -9,7 +9,7 @@
   "author": "Yo",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
@@ -28,7 +28,7 @@
     "helmet-csp": "^3.3.1",
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.11.15",
+    "mongoose": "^5.13.14",
     "nodemailer": "^6.6.2",
     "request": "^2.88.2",
     "safe-regex": "^2.1.1",
