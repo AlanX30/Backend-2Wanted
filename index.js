@@ -30,9 +30,9 @@ app.use(
         scriptSrc: ["'self'", "'unsafe-inline'", 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com/', 'https://fonts.gstatic.com/'],
         objectSrc: ["'none'"],
-        upgradeInsecureRequests: ["'false'"],
+        upgradeInsecureRequests: [],
       },
-      reportOnly: true,
+      reportOnly: false,
     })
 )
 app.use(function (req, res, next) {
