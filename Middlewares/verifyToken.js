@@ -5,9 +5,9 @@ const fs = require('fs')
 const publicKey = fs.readFileSync(path.join(__dirname +'/public.key'), 'utf8')
 
 const verifyToken = async(req, res, next) => {
-
+    
     const token = req.signedCookies.token
-
+    console.log(req.cookies.token, req.signedCookies.token)
     if (!token) {
         return res.json({auth: 'false', error: 'No token provided'})
     }

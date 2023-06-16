@@ -8,10 +8,6 @@ const Decimal = require('decimal.js-light')
 const balanceUserModel = require('../models/BalanceUser')
 const csrf = require('csurf')
 
-const csrfProtection = csrf({ 
-  cookie: true 
-})
-
 const myIdWallet = process.env.ID_MYWALLET
 const xpub = process.env.XPUB
 const mnemonic = process.env.MNEMONIC
@@ -20,7 +16,7 @@ const apiKey= process.env.BTCAPIKEY
 /* NO HAY FUNCIONES DE CANCELAR RETIRO */
 
 /* ------------------------------------------------------------------------------------------------------- */
-router.post('/api/sendbtc', csrfProtection, verifyToken, async(req, res) => {
+router.post('/api/sendbtc', verifyToken, async(req, res) => {
   try{
 
     const { address, amount, password } = req.body
@@ -143,7 +139,7 @@ router.post('/api/notificationbtc', async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/tatumDetailUser', csrfProtection, verifyTokenAdmin, async(req, res) => {
+router.post('/api/tatumDetailUser', verifyTokenAdmin, async(req, res) => {
   try{
 
     const { username, myWallet } = req.body

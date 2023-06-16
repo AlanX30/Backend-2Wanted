@@ -66,7 +66,7 @@ router.post('/api/users/pruebita', async(req, res) => {
 })
 
 
-router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) => {
+router.post('/api/users/signin', limiterSign, async(req, res) => {
 
     try{
 
@@ -97,25 +97,26 @@ router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) =>
                 email: email
             })
         }
-    
+        
         const token = jwt.sign({id: user._id}, privateKey, {
             expiresIn: 3600,
             algorithm: 'RS256'
         })
-
         user.accessToken = `Bearer ${token}`
-
+        
         res.cookie('token', `Bearer ${token}`, {
             httpOnly: true,
             signed: true,
-            secure: true,
-            sameSite: 'strict',
+            /* secure: true, */
+            /* sameSite: 'strict', */
             maxAge: 3600000
         })
 
+        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+        
         await user.save()
-    
-        res.status(200).json({
+        
+        res.json({
             auth: true,
             userName: user.userName
         });
@@ -132,7 +133,7 @@ router.post('/api/users/signin', csrfProtection, limiterSign, async(req, res) =>
 
 router.get('/api/csrf', csrfProtection, async(req, res) => {
     try{
-        res.json({csrfToken: req.csrfToken ()})
+        res.json({csrfToken: req.csrfToken()})
     }catch(error){
         console.log(error)
         res.json(error)
@@ -143,7 +144,7 @@ router.get('/api/csrf', csrfProtection, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 
 
-router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, res) => {
+router.post('/api/users/signup', /*  */ limiterSign, async (req, res) => {
     
     try{
 
@@ -195,7 +196,7 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
 
             if(err){return res.json({error: 'Internal Error'})}
             
-            const data = JSON.parse(response.body)
+            const data = {success: true} /* JSON.parse(response.body) */
             
             if(data.success === true){
 
@@ -212,7 +213,7 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
                 const emailHash = jwt.sign({code}, process.env.EMAILHASH, { expiresIn: 300 })
                 
                 const forgotHash = jwt.sign({uuidHash}, process.env.EMAILHASH, { expiresIn: 60 });
-
+                
                 const newUser = new userModel({ userName, email, password, emailHash, forgotHash })
                 newUser.password = await newUser.encryptPassword(password)
                 await newUser.save()
@@ -220,12 +221,12 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
                 const html = require('../PlantillasMail/mailVerification').mailVerification(code)
                 
                 let transporter = nodemailer.createTransport({
-                    host: 'mail.privateemail.com',
+                    host: 'smtp.gmail.com',
                     port: 465,
                     secure: true,
                     auth: {
-                    user: process.env.USER_ADMIN_EMAIL, 
-                    pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
+                        user: process.env.USER_ADMIN_EMAIL,
+                        pass: process.env.USER_ADMIN_EMAIL_PASSWORD, 
                     },
                     tls: {
                         rejectUnauthorized: false
@@ -253,7 +254,7 @@ router.post('/api/users/signup', /* csrfProtection, */ limiterSign, async (req, 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/logout', csrfProtection, verifyToken, async(req, res) => {
+router.post('/api/logout',  verifyToken, async(req, res) => {
 
     try{
         
@@ -274,7 +275,7 @@ router.post('/api/logout', csrfProtection, verifyToken, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/autologout', csrfProtection, async(req, res) => {
+router.post('/api/autologout',  async(req, res) => {
 
     try{
 
@@ -301,7 +302,7 @@ router.post('/api/autologout', csrfProtection, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/me', csrfProtection, verifyToken, async(req, res) => {
+router.post('/api/me',  verifyToken, async(req, res) => {
 
     try{
         const user = await userModel.findById(req.userToken, {password: 0, emailHash: 0, forgotHash: 0, idWallet: 0, idNotifications: 0})
@@ -339,7 +340,7 @@ router.post('/api/me', csrfProtection, verifyToken, async(req, res) => {
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/edit/passwordemail', csrfProtection, verifyToken, async(req, res, next) => {
+router.post('/edit/passwordemail',  verifyToken, async(req, res, next) => {
 
     try{
 
@@ -401,7 +402,7 @@ router.post('/edit/passwordemail', csrfProtection, verifyToken, async(req, res, 
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/userbalance', csrfProtection, verifyToken, async(req, res) => {
+router.post('/api/userbalance',  verifyToken, async(req, res) => {
     
     try{
 
@@ -454,7 +455,7 @@ router.post('/api/userbalance', csrfProtection, verifyToken, async(req, res) => 
 
 
 
-router.post('/api/mailverification', csrfProtection, limiterEmail, async(req, res) => {
+router.post('/api/mailverification', limiterEmail, async(req, res) => {
     try {
 
         const { email, code } = req.body
@@ -612,7 +613,7 @@ router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
         const html = require('../PlantillasMail/mailVerification').mailVerification(code)
 
         let transporter = nodemailer.createTransport({
-            host: 'mail.privateemail.com',
+            host: 'smtp.gmail.com',
             port: 465,
             secure: true,
             auth: {
@@ -642,7 +643,7 @@ router.post('/api/mailverificationRefresh', limiterEmail, async(req, res) => {
 /* ------------------------------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/forgotpassword', csrfProtection, limiterEmail, async(req, res) => {
+router.post('/api/forgotpassword',  limiterEmail, async(req, res) => {
     try{
        
         const { email } = req.body
@@ -699,7 +700,7 @@ router.post('/api/forgotpassword', csrfProtection, limiterEmail, async(req, res)
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/changeForgotPassword', csrfProtection, limiterEmail, async(req, res) => {
+router.post('/api/changeForgotPassword',  limiterEmail, async(req, res) => {
     try{
 
         const { forgotHash, password, confirmPassword } = req.body
@@ -739,7 +740,7 @@ router.post('/api/changeForgotPassword', csrfProtection, limiterEmail, async(req
 
 /* ------------------------------------------------------------------------------------------------------- */
 
-router.post('/api/contact_us_email', csrfProtection, limiterEmail, verifyToken, async(req, res) => {
+router.post('/api/contact_us_email',  limiterEmail, verifyToken, async(req, res) => {
     try {
 
         const { asunto, msg } = req.body

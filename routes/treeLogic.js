@@ -9,11 +9,7 @@ const verifyToken = require('../Middlewares/verifyToken')
 
 const myIdWallet = process.env.ID_MYWALLET
 
-const csrfProtection = csrf({ 
-    cookie: true 
-})
-
-router.post('/api/in-sala', csrfProtection, verifyToken, async(req, res) => {  
+router.post('/api/in-sala', verifyToken, async(req, res) => {  
 
     const userToken = await userModel.findById(req.userToken, {userName: 1, idWallet: 1,})
 

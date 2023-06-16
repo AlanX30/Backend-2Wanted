@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const csp = require('helmet-csp')
 const path = require('path')
+const cors = require('cors')
 require('dotenv').config()
 require('./database')
 
@@ -17,12 +18,13 @@ socket.connect(server)
 
 ///* ------------Middlewares--------------------------------- */
 
+app.use(cors())
 app.use(helmet())
-app.use(cookieParser(process.env.SECRET_COOKIE))
 app.use(bodyParser.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
-app.use(
+app.use(cookieParser("secret"))
+/* app.use(
     csp({
       directives: {
         defaultSrc: ["'self'", "'unsafe-inline'"],
@@ -40,7 +42,7 @@ app.use(function (req, res, next) {
       `font-src * https://fonts.gstatic.com/ https://fonts.googleapis.com/`
     );
     next();
-})
+}) */
 
 /* ------------Router--------------------------------- */
 

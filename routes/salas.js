@@ -15,11 +15,7 @@ const reg_whiteSpace = /^$|\s+/
 const myIdWallet = process.env.ID_MYWALLET
 const apiKey= process.env.BTCAPIKEY
 
-const csrfProtection = csrf({ 
-    cookie: true 
-})
-
-router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
+router.post('/api/new/sala', verifyToken ,async(req, res) => {
     try {
 
         const { name, password, price } = req.body
@@ -129,7 +125,7 @@ router.post('/api/new/sala', csrfProtection, verifyToken ,async(req, res) => {
     }
 })
 
-router.post('/api/search/sala', csrfProtection, verifyToken, async(req, res) =>{
+router.post('/api/search/sala', verifyToken, async(req, res) =>{
     
     try{
 
@@ -178,7 +174,7 @@ router.post('/api/search/sala', csrfProtection, verifyToken, async(req, res) =>{
     
 })
 
-router.post('/api/search/listSalas', csrfProtection, verifyToken, async(req, res) => {
+router.post('/api/search/listSalas', verifyToken, async(req, res) => {
     
     try{
 
@@ -211,7 +207,7 @@ router.post('/api/search/listSalas', csrfProtection, verifyToken, async(req, res
     }
 })
 
-router.post('/api/newUserInSala', csrfProtection, verifyToken, async(req, res, next) => {
+router.post('/api/newUserInSala', verifyToken, async(req, res, next) => {
     
     try {
 
